@@ -1,32 +1,30 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block title %}Learner Detail | EduSentinel AI{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="fw-bold mb-1">{{ student.full_name }}</h1>
-    <p class="text-secondary mb-0">
-      Admission No: {{ student.admission_no }} • {{ student.course.program_level }} in {{ student.course.name }}
-    </p>
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Learner Record</div>
+    <h1 class="page-title">{{ student.full_name }}</h1>
+    <p class="page-subtitle">Admission No: {{ student.admission_no }} | {{ student.course.program_level }} in {{ student.course.name }}</p>
   </div>
 
-  <div class="d-flex gap-2 flex-wrap">
-    <a href="{{ url_for('students.add_academic_record', student_id=student.id) }}" class="btn btn-brand rounded-pill px-4">
-      Add Academic Record
-    </a>
-    <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-outline-primary rounded-pill px-4">
-      Add Questionnaire
-    </a>
-    <a href="{{ url_for('students.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
-      Back to Learners
-    </a>
+  <div class="header-actions">
+    <a href="{{ url_for('students.add_academic_record', student_id=student.id) }}" class="btn btn-brand rounded-pill px-4">Add Academic Record</a>
+    <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-outline-primary rounded-pill px-4">Add Student Check-in</a>
+    <a href="{{ url_for('students.index') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Learners</a>
   </div>
 </div>
 
 <div class="row g-4 mb-4">
   <div class="col-lg-4">
     <div class="panel-card p-4 h-100">
-      <h4 class="mb-3">Learner Profile</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Overview</div>
+          <h4 class="section-title">Learner Profile</h4>
+        </div>
+      </div>
       <div class="mb-2"><strong>Full Name:</strong> {{ student.full_name }}</div>
       <div class="mb-2"><strong>Admission No:</strong> {{ student.admission_no }}</div>
       <div class="mb-2"><strong>Email:</strong> {{ student.email or 'Not provided' }}</div>
@@ -42,8 +40,11 @@
 
   <div class="col-lg-8">
     <div class="panel-card p-4 h-100">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Prediction Result</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Risk Review</div>
+          <h4 class="section-title">Latest Prediction</h4>
+        </div>
         {% if prediction %}
         <span class="badge rounded-pill {{ 'text-bg-danger' if prediction.predicted_risk == 'High Risk' else 'text-bg-warning' if prediction.predicted_risk == 'Medium Risk' else 'text-bg-success' }}">
           {{ prediction.predicted_risk }}
@@ -56,7 +57,7 @@
         <div class="col-md-4">
           <div class="stat-card">
             <span>High Risk Probability</span>
-            <h2>{{ '%.2f'|format(prediction.high_risk_probability) }}%</h2>
+            <h2>{{ '%.2f'|format(prediction.high_risk_probability * 100) }}%</h2>
           </div>
         </div>
         <div class="col-md-4">
@@ -77,22 +78,20 @@
       <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
           <div class="fw-semibold mb-1">{{ advisory.alert_message }}</div>
-          <div class="text-secondary small">Recommended intervention timeline: {{ advisory.deadline_label }} (by {{ advisory.deadline_date }})</div>
+          <div class="text-secondary small">Suggested follow-up: {{ advisory.deadline_label }} (by {{ advisory.deadline_date }})</div>
         </div>
         <span class="badge rounded-pill {{ advisory.badge_class }}">{{ advisory.priority }}</span>
       </div>
       {% endif %}
 
-      <h5 class="mb-2">Recommendation</h5>
+      <h5 class="mb-2">What to do next</h5>
       <p class="text-secondary mb-0">{{ prediction.recommendation }}</p>
       {% else %}
-      <div class="alert alert-light border mb-3">
-        No prediction record is available yet.
-      </div>
+      <div class="alert alert-light border mb-3">No prediction has been saved for this learner yet.</div>
       {% endif %}
 
       <form method="post" action="{{ url_for('students.run_prediction', student_id=student.id) }}">
-        <button type="submit" class="btn btn-success rounded-pill px-4">Run Prediction</button>
+        <button type="submit" class="btn btn-success rounded-pill px-4">Generate Prediction</button>
       </form>
     </div>
   </div>
@@ -101,11 +100,12 @@
 <div class="row g-4 mt-1">
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Academic Record</h4>
-        <a href="{{ url_for('students.add_academic_record', student_id=student.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
-          Add / Update
-        </a>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Marks and Attendance</div>
+          <h4 class="section-title">Academic Record</h4>
+        </div>
+        <a href="{{ url_for('students.add_academic_record', student_id=student.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">Add or Update</a>
       </div>
 
       {% if record %}
@@ -116,22 +116,21 @@
       <div class="mb-2"><strong>Exam Mark:</strong> {{ record.exam_mark }}</div>
       <div class="mb-2"><strong>Final Mark:</strong> {{ record.final_mark }}</div>
       <div class="mb-2"><strong>Attendance:</strong> {{ record.attendance_percent }}%</div>
-      <div class="mb-0"><strong>Teacher Comment:</strong> {{ record.teacher_comment or 'No comment provided' }}</div>
+      <div class="mb-0"><strong>Teacher Comment:</strong> {{ record.teacher_comment or 'No comment added' }}</div>
       {% else %}
-      <div class="alert alert-light border mb-0">
-        No academic record is available yet.
-      </div>
+      <div class="alert alert-light border mb-0">No academic record has been added yet.</div>
       {% endif %}
     </div>
   </div>
 
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Questionnaire Response</h4>
-        <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
-          Add / Update
-        </a>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Student Check-in</div>
+          <h4 class="section-title">Questionnaire Answers</h4>
+        </div>
+        <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">Add or Update</a>
       </div>
 
       {% if response %}
@@ -141,9 +140,7 @@
       <div class="mb-2"><strong>Early Warning Helpful:</strong> {{ response.early_warning_helpful }}</div>
       <div class="mb-0"><strong>Study Hours per Week:</strong> {{ response.study_hours_per_week }}</div>
       {% else %}
-      <div class="alert alert-light border mb-0">
-        No questionnaire response is available yet.
-      </div>
+      <div class="alert alert-light border mb-0">No student check-in has been added yet.</div>
       {% endif %}
     </div>
   </div>
@@ -153,7 +150,12 @@
 <div class="row g-4 mt-1">
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <h4 class="mb-3">Top Risk Drivers</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Main Concerns</div>
+          <h4 class="section-title">Top Risk Drivers</h4>
+        </div>
+      </div>
       <ul class="mb-0 ps-3">
         {% for driver in advisory.drivers %}
         <li class="mb-2">{{ driver }}</li>
@@ -164,7 +166,12 @@
 
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <h4 class="mb-3">Recommended Action Plan</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Support Plan</div>
+          <h4 class="section-title">Recommended Action Plan</h4>
+        </div>
+      </div>
       <ol class="mb-0 ps-3">
         {% for step in advisory.action_plan %}
         <li class="mb-2">{{ step }}</li>
@@ -174,4 +181,67 @@
   </div>
 </div>
 {% endif %}
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Follow-up</div>
+          <h4 class="section-title">Intervention Log</h4>
+        </div>
+      </div>
+      <div class="d-grid gap-3">
+        {% for intervention in interventions %}
+        <div class="border rounded-4 p-3 bg-white">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+            <div>
+              <div class="fw-semibold">{{ intervention.title }}</div>
+              <div class="text-secondary small">{{ intervention.created_at.strftime('%d %b %Y') }} | {{ intervention.author.full_name if intervention.author else 'Staff' }}</div>
+            </div>
+            <span class="badge rounded-pill {{ 'text-bg-success' if intervention.status == 'completed' else 'text-bg-warning' }}">{{ intervention.status }}</span>
+          </div>
+          <div class="text-secondary small mb-2">{{ intervention.note }}</div>
+          {% if intervention.follow_up_date %}<div class="small mb-2"><strong>Follow-up:</strong> {{ intervention.follow_up_date.strftime('%d %b %Y') }}</div>{% endif %}
+          {% if intervention.outcome_note %}<div class="small mb-2"><strong>Outcome:</strong> {{ intervention.outcome_note }}</div>{% endif %}
+          {% if intervention.status != 'completed' %}
+          <form method="post" action="{{ url_for('students.complete_intervention', intervention_id=intervention.id) }}" class="d-grid gap-2">
+            <textarea name="outcome_note" class="form-control" rows="2" placeholder="Outcome note (optional)"></textarea>
+            <button type="submit" class="btn btn-sm btn-outline-success rounded-pill">Mark Completed</button>
+          </form>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="alert alert-light border mb-0">No intervention notes have been added yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">New Note</div>
+          <h4 class="section-title">Add Follow-up Note</h4>
+        </div>
+      </div>
+      <form method="post" action="{{ url_for('students.add_intervention', student_id=student.id) }}" class="d-grid gap-3">
+        <div>
+          <label class="form-label">Title</label>
+          <input type="text" name="title" class="form-control" required>
+        </div>
+        <div>
+          <label class="form-label">What was agreed or observed?</label>
+          <textarea name="note" class="form-control" rows="5" required></textarea>
+        </div>
+        <div>
+          <label class="form-label">Follow-up Date</label>
+          <input type="date" name="follow_up_date" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-brand rounded-pill px-4">Save Note</button>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Bulk Imports | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">Bulk CSV Imports</h1>
+    <p class="text-secondary mb-0">Import learners and academic records using CSV files.</p>
+  </div>
+  <a href="{{ url_for('admin.accounts') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Accounts</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Import Learners</h4>
+      <p class="text-secondary small">Required columns: <code>admission_no</code>, <code>full_name</code>, <code>department_code</code>, <code>course_code</code>, <code>year_of_study</code>, <code>semester</code>.</p>
+      <p class="text-secondary small">Optional columns: <code>email</code>, <code>phone</code>, <code>gender</code>, <code>school_name</code>.</p>
+      <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="import_type" value="learners">
+        <div class="mb-3">
+          <label class="form-label">Learner CSV</label>
+          <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+        </div>
+        <button type="submit" class="btn btn-brand rounded-pill px-4">Import Learners</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Import Academic Records</h4>
+      <p class="text-secondary small">Required columns: <code>admission_no</code>, <code>term_name</code>, <code>assignment_mark</code>, <code>cat_mark</code>, <code>exam_mark</code>, <code>attendance_percent</code>.</p>
+      <p class="text-secondary small">Optional columns: <code>teacher_comment</code>, <code>is_verified</code>.</p>
+      <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="import_type" value="academic_records">
+        <div class="mb-3">
+          <label class="form-label">Academic Record CSV</label>
+          <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+        </div>
+        <button type="submit" class="btn btn-brand rounded-pill px-4">Import Records</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

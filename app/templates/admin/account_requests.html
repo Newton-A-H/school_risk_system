@@ -2,15 +2,22 @@
 {% block title %}Account Requests | EduSentinel AI{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="fw-bold mb-1">Account Requests</h1>
-    <p class="text-secondary mb-0">Review, approve, reject, resend verification, or delete requests.</p>
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Access Requests</div>
+    <h1 class="page-title">Account Requests</h1>
+    <p class="page-subtitle">Review new requests, resend email confirmation when needed, and decide what to do next.</p>
   </div>
   <a href="{{ url_for('admin.accounts') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Accounts</a>
 </div>
 
 <div class="panel-card p-4">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Queue</div>
+      <h4 class="section-title">Requests Waiting for Review</h4>
+    </div>
+  </div>
   <div class="table-responsive">
     <table class="table align-middle">
       <thead>
@@ -47,7 +54,7 @@
             <div class="d-flex gap-2 justify-content-end flex-wrap">
               {% if not req.is_email_verified %}
               <form method="post" action="{{ url_for('admin.resend_verification', request_id=req.id) }}">
-                <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill">Resend Verification</button>
+                <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill">Resend Email</button>
               </form>
               {% endif %}
 
@@ -68,7 +75,7 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="8" class="text-secondary">No account requests found.</td>
+          <td colspan="8"><div class="empty-state">There are no account requests to review right now.</div></td>
         </tr>
         {% endfor %}
       </tbody>

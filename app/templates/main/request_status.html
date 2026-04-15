@@ -5,10 +5,11 @@
 <div class="row justify-content-center">
   <div class="col-xl-8 col-lg-9">
     <div class="panel-card p-4 p-lg-5">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div>
-          <h1 class="fw-bold mb-1">Account Request Status</h1>
-          <p class="text-secondary mb-0">Track verification and approval progress using your email address.</p>
+      <div class="page-header">
+        <div class="page-header-copy">
+          <div class="page-eyebrow">Request Progress</div>
+          <h1 class="page-title">Request Status</h1>
+          <p class="page-subtitle">Here is the latest update on your account request.</p>
         </div>
         <a href="{{ url_for('main.home') }}" class="btn btn-outline-secondary rounded-pill px-4">Back Home</a>
       </div>
@@ -51,13 +52,13 @@
 
       <div class="alert alert-light border mb-4">
         {% if not account_request.is_email_verified %}
-          Please verify your email first. Once verified, the administrator can review your request.
+          Please check your email and confirm your address first. Once that is done, the request can be reviewed.
         {% elif account_request.status == 'pending' %}
-          Your email is verified. Your request is now awaiting administrator approval.
+          Your email has been confirmed. Your request is now waiting for approval.
         {% elif account_request.status == 'approved' %}
-          Your request has been approved. If email delivery is enabled, your credentials were sent to your email.
+          Your request has been approved. If email delivery is set up, your login details have been sent to your email.
         {% else %}
-          Your request was reviewed and not approved.
+          Your request was reviewed but was not approved.
         {% endif %}
       </div>
 
@@ -69,7 +70,7 @@
           Check Another Request
         </a>
         <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4">
-          Go to Login
+          Back to Login
         </a>
       </div>
     </div>

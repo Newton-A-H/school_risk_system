@@ -2,10 +2,11 @@
 {% block title %}Lecturer Dashboard | EduSentinel AI{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="fw-bold mb-1">Lecturer Dashboard</h1>
-    <p class="text-secondary mb-0">
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Department View</div>
+    <h1 class="page-title">Lecturer Dashboard</h1>
+    <p class="page-subtitle">
       {% if department %}
       Department: {{ department.name }}
       {% else %}
@@ -13,7 +14,7 @@
       {% endif %}
     </p>
   </div>
-  <div class="d-flex gap-2 flex-wrap">
+  <div class="header-actions">
     <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">New Learner Intake</a>
     <a href="{{ url_for('lecturer.academic_records') }}" class="btn btn-outline-primary rounded-pill px-4">Verify Academic Records</a>
   </div>
@@ -47,9 +48,31 @@
 </div>
 
 <div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Shortcuts</div>
+          <h4 class="section-title">Quick Actions</h4>
+        </div>
+        <span class="badge text-bg-light">Department tools</span>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('students.index', risk_level='High Risk') }}" class="btn btn-outline-danger rounded-pill">At-Risk Learners</a>
+        <a href="{{ url_for('students.index', semester='Semester 1') }}" class="btn btn-outline-primary rounded-pill">Semester 1</a>
+        <a href="{{ url_for('students.index', semester='Semester 2') }}" class="btn btn-outline-primary rounded-pill">Semester 2</a>
+        <a href="{{ url_for('students.index', export='csv') }}" class="btn btn-outline-secondary rounded-pill">Export Learners</a>
+      </div>
+    </div>
+  </div>
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <h4 class="mb-3">Lecturer Privileges</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Role Scope</div>
+          <h4 class="section-title">Lecturer Privileges</h4>
+        </div>
+      </div>
       <ul class="mb-0 ps-3 text-secondary">
         <li class="mb-2">View all learners in your department.</li>
         <li class="mb-2">Create learner intake records.</li>
@@ -63,7 +86,12 @@
 
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <h4 class="mb-3">Model Status</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Readiness</div>
+          <h4 class="section-title">Model Status</h4>
+        </div>
+      </div>
       <div class="mb-2"><strong>Ready:</strong> {{ 'Yes' if model_meta and model_meta.get('ready') else 'No' }}</div>
       <div class="mb-2"><strong>Record Count:</strong> {{ model_meta.get('record_count', 0) if model_meta else 0 }}</div>
       <div class="mb-2"><strong>Weighted F1:</strong> {{ '%.2f'|format(model_meta.get('test_f1_weighted', 0)) if model_meta else '0.00' }}</div>
@@ -76,7 +104,51 @@
 <div class="row g-4 mb-4">
   <div class="col-12">
     <div class="panel-card p-4">
-      <h4 class="mb-3">Department Learners</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Department Analytics</div>
+          <h4 class="section-title">Course Risk Snapshot</h4>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Learners</th>
+              <th>High Risk</th>
+              <th>Medium Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in course_risk_rows %}
+            <tr>
+              <td>{{ row.course_code }} | {{ row.course_name }}</td>
+              <td>{{ row.learners }}</td>
+              <td>{{ row.high_risk }}</td>
+              <td>{{ row.medium_risk }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4"><div class="empty-state">No course analytics available yet.</div></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Roster</div>
+          <h4 class="section-title">Department Learners</h4>
+        </div>
+      </div>
       <div class="table-responsive">
         <table class="table align-middle">
           <thead>
@@ -105,7 +177,7 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="6" class="text-secondary">No learners found for this department.</td>
+              <td colspan="6"><div class="empty-state">No learners found for this department.</div></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -118,7 +190,12 @@
 <div class="row g-4">
   <div class="col-12">
     <div class="panel-card p-4">
-      <h4 class="mb-3">Recent Department Predictions</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Recent Activity</div>
+          <h4 class="section-title">Recent Department Predictions</h4>
+        </div>
+      </div>
       <div class="table-responsive">
         <table class="table align-middle">
           <thead>
@@ -140,12 +217,12 @@
                   {{ prediction.predicted_risk }}
                 </span>
               </td>
-              <td>{{ '%.2f'|format(prediction.high_risk_probability) }}%</td>
+              <td>{{ '%.2f'|format(prediction.high_risk_probability * 100) }}%</td>
               <td>{{ prediction.created_at.strftime('%d %b %Y') }}</td>
             </tr>
             {% else %}
             <tr>
-              <td colspan="5" class="text-secondary">No predictions available yet.</td>
+              <td colspan="5"><div class="empty-state">No predictions available yet.</div></td>
             </tr>
             {% endfor %}
           </tbody>

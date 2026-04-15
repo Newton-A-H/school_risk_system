@@ -164,5 +164,75 @@ def bootstrap_database():
             FOREIGN KEY (course_id) REFERENCES courses(id)
         """))
 
+    # ----------------------------
+    # feedback conversations updates
+    # ----------------------------
+    if _table_exists("feedback_conversations"):
+        if not _column_exists("feedback_conversations", "last_user_message_at"):
+            db.session.execute(text("ALTER TABLE feedback_conversations ADD last_user_message_at DATETIME2 NULL"))
+        if not _column_exists("feedback_conversations", "last_admin_message_at"):
+            db.session.execute(text("ALTER TABLE feedback_conversations ADD last_admin_message_at DATETIME2 NULL"))
+        if not _column_exists("feedback_conversations", "last_read_by_user_at"):
+            db.session.execute(text("ALTER TABLE feedback_conversations ADD last_read_by_user_at DATETIME2 NULL"))
+        if not _column_exists("feedback_conversations", "last_read_by_admin_at"):
+            db.session.execute(text("ALTER TABLE feedback_conversations ADD last_read_by_admin_at DATETIME2 NULL"))
+
+    # ----------------------------
+    # intervention_logs table
+    # ----------------------------
+    if not _table_exists("intervention_logs"):
+        db.session.execute(text("""
+            CREATE TABLE intervention_logs (
+                id INT IDENTITY(1,1) PRIMARY KEY,
+                student_id INT NOT NULL,
+                created_by INT NOT NULL,
+                title NVARCHAR(150) NOT NULL,
+                note NVARCHAR(MAX) NOT NULL,
+                status NVARCHAR(30) NOT NULL DEFAULT 'planned',
+                follow_up_date DATETIME2 NULL,
+                completed_at DATETIME2 NULL,
+                outcome_note NVARCHAR(MAX) NULL,
+                created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
+                updated_at DATETIME2 NOT NULL DEFAULT GETDATE()
+            )
+        """))
+
+    if not _fk_exists("FK_intervention_logs_student_id"):
+        db.session.execute(text("""
+            ALTER TABLE intervention_logs
+            ADD CONSTRAINT FK_intervention_logs_student_id
+            FOREIGN KEY (student_id) REFERENCES students(id)
+        """))
+
+    if not _fk_exists("FK_intervention_logs_created_by"):
+        db.session.execute(text("""
+            ALTER TABLE intervention_logs
+            ADD CONSTRAINT FK_intervention_logs_created_by
+            FOREIGN KEY (created_by) REFERENCES users(id)
+        """))
+
+    # ----------------------------
+    # audit_logs table
+    # ----------------------------
+    if not _table_exists("audit_logs"):
+        db.session.execute(text("""
+            CREATE TABLE audit_logs (
+                id INT IDENTITY(1,1) PRIMARY KEY,
+                actor_user_id INT NULL,
+                action NVARCHAR(120) NOT NULL,
+                target_type NVARCHAR(80) NOT NULL,
+                target_id INT NULL,
+                detail NVARCHAR(MAX) NULL,
+                created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+            )
+        """))
+
+    if not _fk_exists("FK_audit_logs_actor_user_id"):
+        db.session.execute(text("""
+            ALTER TABLE audit_logs
+            ADD CONSTRAINT FK_audit_logs_actor_user_id
+            FOREIGN KEY (actor_user_id) REFERENCES users(id)
+        """))
+
     db.session.commit()
     current_app.logger.info("Database bootstrap completed successfully.")

@@ -6,6 +6,8 @@
   --primary: #0f172a;
   --accent: #22c55e;
   --accent-dark: #16a34a;
+  --accent-soft: #dcfce7;
+  --panel-tint: #f8fbff;
   --warning: #f59e0b;
   --danger: #ef4444;
   --bg: #f8fafc;
@@ -19,6 +21,119 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg);
   color: var(--text);
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-header-copy {
+  max-width: 680px;
+}
+
+.page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0891b2;
+  margin-bottom: 0.45rem;
+}
+
+.page-title {
+  font-size: clamp(1.85rem, 2vw, 2.45rem);
+  line-height: 1.05;
+  margin: 0 0 0.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-shell {
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248, 251, 255, 0.98));
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.section-kicker {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0891b2;
+}
+
+.section-title {
+  margin: 0.15rem 0 0;
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.empty-state {
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  border-radius: 18px;
+  padding: 1.2rem;
+  background: rgba(248, 250, 252, 0.8);
+  color: var(--muted);
+}
+
+.quick-card {
+  text-decoration: none;
+  color: inherit;
+}
+
+.quick-card .stat-card {
+  height: 100%;
+}
+
+.soft-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.soft-list li + li {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(226, 232, 240, 0.85);
 }
 
 /* ============================= */
@@ -78,13 +193,14 @@ body {
 /* ============================= */
 
 .btn-brand {
-  background-color: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #14b8a6);
   color: #fff;
   border: none;
+  box-shadow: 0 10px 20px rgba(34, 197, 94, 0.18);
 }
 
 .btn-brand:hover {
-  background-color: var(--accent-dark);
+  background: linear-gradient(135deg, var(--accent-dark), #0f766e);
   color: #fff;
 }
 
@@ -93,14 +209,16 @@ body {
 /* ============================= */
 
 .panel-card {
-  background: var(--card-bg);
+  background: linear-gradient(180deg, #ffffff, var(--panel-tint));
   border-radius: 18px;
   border: 1px solid var(--border);
   box-shadow: 0 6px 20px rgba(0,0,0,0.04);
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  background:
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 28%),
+    linear-gradient(135deg, #ffffff, #f1f5f9);
   border-radius: 18px;
   padding: 20px;
   border: 1px solid var(--border);
@@ -140,7 +258,7 @@ body {
 }
 
 .table tbody tr:hover {
-  background-color: #f1f5f9;
+  background-color: #eef7fb;
 }
 
 /* ============================= */
@@ -159,6 +277,7 @@ body {
 
 .alert {
   border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 /* ============================= */
@@ -175,6 +294,14 @@ body {
 .form-select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 0.2rem rgba(34,197,94,0.15);
+}
+
+.form-control,
+.form-select,
+.btn,
+.panel-card,
+.stat-card {
+  transition: all 0.2s ease;
 }
 
 /* ============================= */
@@ -220,6 +347,10 @@ canvas {
 /* ============================= */
 
 @media (max-width: 768px) {
+  .page-header {
+    align-items: flex-start;
+  }
+
   .brand-text {
     font-size: 1rem;
   }

@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}Printable Student Report | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 no-print">
+  <div>
+    <h1 class="fw-bold mb-1">Student Progress Report</h1>
+    <p class="text-secondary mb-0">Printable summary of your latest academic and support status.</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('student_portal.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">Back</a>
+    <button type="button" class="btn btn-brand rounded-pill px-4" onclick="window.print()">Print / Save PDF</button>
+  </div>
+</div>
+
+<div class="panel-card p-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">{{ student.full_name }}</h2>
+      <div class="text-secondary">Admission No: {{ student.admission_no }}</div>
+      <div class="text-secondary">{{ student.course.program_level }} in {{ student.course.name }}</div>
+      <div class="text-secondary">{{ student.department.name }} | {{ student.semester }}</div>
+    </div>
+    {% if prediction %}
+    <span class="badge rounded-pill {{ 'text-bg-danger' if prediction.predicted_risk == 'High Risk' else 'text-bg-warning' if prediction.predicted_risk == 'Medium Risk' else 'text-bg-success' }} fs-6">
+      {{ prediction.predicted_risk }}
+    </span>
+    {% endif %}
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="stat-card">
+        <span>Final Mark</span>
+        <h2>{{ '%.2f'|format(record.final_mark) if record else 'N/A' }}</h2>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <span>Attendance</span>
+        <h2>{{ '%.2f'|format(record.attendance_percent) if record else 'N/A' }}</h2>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <span>High Risk %</span>
+        <h2>{{ '%.2f'|format(prediction.high_risk_probability * 100) if prediction else 'N/A' }}{% if prediction %}%{% endif %}</h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <h4 class="mb-3">Latest Academic Record</h4>
+      {% if record %}
+      <ul class="list-unstyled text-secondary mb-0">
+        <li class="mb-2">Term: {{ record.term_name }}</li>
+        <li class="mb-2">Coursework Total: {{ record.coursework_total }}</li>
+        <li class="mb-2">Exam Mark: {{ record.exam_mark }}</li>
+        <li class="mb-2">Final Mark: {{ record.final_mark }}</li>
+        <li class="mb-2">Attendance: {{ record.attendance_percent }}</li>
+        <li class="mb-0">Verification: {{ 'Verified' if record.is_verified else 'Pending Verification' }}</li>
+      </ul>
+      {% else %}
+      <div class="text-secondary">No academic record available yet.</div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-6">
+      <h4 class="mb-3">Latest Questionnaire</h4>
+      {% if response %}
+      <ul class="list-unstyled text-secondary mb-0">
+        <li class="mb-2">Attendance Frequency: {{ response.attendance_frequency }}</li>
+        <li class="mb-2">Coursework On Time: {{ response.coursework_on_time }}</li>
+        <li class="mb-2">Main Challenge: {{ response.main_challenge }}</li>
+        <li class="mb-2">Early Warning Helpful: {{ response.early_warning_helpful }}</li>
+        <li class="mb-0">Study Hours / Week: {{ response.study_hours_per_week }}</li>
+      </ul>
+      {% else %}
+      <div class="text-secondary">No questionnaire response available yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if advisory %}
+  <div class="mb-4">
+    <h4 class="mb-3">Recommendations and Priority</h4>
+    <div class="alert alert-light border">
+      <div class="fw-semibold mb-1">{{ advisory.alert_message }}</div>
+      <div class="text-secondary mb-2">Priority: {{ advisory.priority }} | Target date: {{ advisory.deadline_date }}</div>
+      <div class="text-secondary">{{ prediction.recommendation }}</div>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <h5 class="mb-2">Key Drivers</h5>
+        <ul class="mb-0 ps-3">
+          {% for driver in advisory.drivers %}
+          <li class="mb-2">{{ driver }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="col-lg-6">
+        <h5 class="mb-2">Action Plan</h5>
+        <ol class="mb-0 ps-3">
+          {% for step in advisory.action_plan %}
+          <li class="mb-2">{{ step }}</li>
+          {% endfor %}
+        </ol>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div>
+    <h4 class="mb-3">Intervention Log</h4>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Title</th><th>Status</th><th>Follow-up</th><th>Outcome</th></tr></thead>
+        <tbody>
+          {% for item in interventions %}
+          <tr>
+            <td>{{ item.title }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item.follow_up_date.strftime('%d %b %Y') if item.follow_up_date else 'Not set' }}</td>
+            <td>{{ item.outcome_note or 'Pending' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-secondary">No interventions recorded yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+@media print {
+  .no-print,
+  nav,
+  footer,
+  .chat-launcher,
+  .chat-popup {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
+</style>
+{% endblock %}

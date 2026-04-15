@@ -1,32 +1,42 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block title %}Support Conversations | EduSentinel AI{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="fw-bold mb-1">Support Conversations</h1>
-    <p class="text-secondary mb-0">Review support history and respond to user issues.</p>
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Support Inbox</div>
+    <h1 class="page-title">Support Messages</h1>
+    <p class="page-subtitle">Read new messages, follow up on open cases, and keep support moving.</p>
   </div>
-  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Dashboard</a>
+  <div class="header-actions">
+    <span class="badge rounded-pill text-bg-danger">{{ unread_count }} waiting</span>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Dashboard</a>
+  </div>
 </div>
 
 <div class="row g-4">
   {% for conversation in conversations %}
   <div class="col-12">
     <div class="panel-card p-4">
-      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+      <div class="section-head">
         <div>
-          <h4 class="mb-1">{{ conversation.subject }}</h4>
+          <div class="section-kicker">Conversation</div>
+          <h4 class="section-title">{{ conversation.subject }}</h4>
           <div class="text-secondary small">
             {{ conversation.sender_name }}
-            {% if conversation.sender_email %} • {{ conversation.sender_email }}{% endif %}
-            • {{ conversation.support_type }}
-            • {{ conversation.last_message_at.strftime('%d %b %Y %H:%M') }}
+            {% if conversation.sender_email %} | {{ conversation.sender_email }}{% endif %}
+            | {{ conversation.support_type }}
+            | Last update: {{ conversation.last_message_at.strftime('%d %b %Y %H:%M') }}
           </div>
         </div>
-        <span class="badge rounded-pill {{ 'text-bg-warning' if conversation.status == 'open' else 'text-bg-secondary' }}">
-          {{ conversation.status }}
-        </span>
+        <div class="d-flex gap-2 flex-wrap">
+          {% if conversation.last_user_message_at and (not conversation.last_read_by_admin_at or conversation.last_user_message_at > conversation.last_read_by_admin_at) %}
+          <span class="badge rounded-pill text-bg-danger">New</span>
+          {% endif %}
+          <span class="badge rounded-pill {{ 'text-bg-warning' if conversation.status == 'open' else 'text-bg-secondary' }}">
+            {{ conversation.status }}
+          </span>
+        </div>
       </div>
 
       <div class="text-secondary small mb-3">
@@ -35,7 +45,7 @@
 
       <div class="d-flex flex-wrap gap-2">
         <a href="{{ url_for('admin.feedback_conversation_detail', conversation_id=conversation.id) }}" class="btn btn-outline-primary rounded-pill px-4">
-          Open Conversation
+          Open Message
         </a>
         <form method="post" action="{{ url_for('admin.delete_feedback_conversation', conversation_id=conversation.id) }}" onsubmit="return confirm('Delete this conversation?');">
           <button type="submit" class="btn btn-outline-danger rounded-pill px-4">Delete</button>
@@ -46,7 +56,7 @@
   {% else %}
   <div class="col-12">
     <div class="panel-card p-4">
-      <div class="text-secondary">No support conversations yet.</div>
+      <div class="empty-state">There are no support messages yet.</div>
     </div>
   </div>
   {% endfor %}

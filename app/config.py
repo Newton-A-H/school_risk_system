@@ -13,10 +13,14 @@ class Config:
         "mssql+pyodbc://@localhost/AcademicRiskDB?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    TESTING = False
+    BOOTSTRAP_DATABASE = os.environ.get("BOOTSTRAP_DATABASE", "true").lower() == "true"
+    VALIDATE_STARTUP = os.environ.get("VALIDATE_STARTUP", "true").lower() == "true"
 
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
 
     MAIL_ENABLED = os.environ.get("MAIL_ENABLED", "false").lower() == "true"
     MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")

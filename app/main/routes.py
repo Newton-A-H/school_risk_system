@@ -1,4 +1,6 @@
 import secrets
+import json
+import os
 from datetime import datetime
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request
@@ -11,12 +13,18 @@ from ..models import (
     AccountRequest,
     FeedbackConversation,
     FeedbackMessage,
+    AuditLog,
+    Student,
+    AcademicRecord,
+    InterventionLog,
+    RiskPrediction,
 )
 from ..services.email_service import send_verification_email
 from ..services.token_service import verify_token
 
 
 main_bp = Blueprint("main", __name__)
+META_FILE = os.path.join("artifacts", "model_meta.json")
 
 
 SUPPORT_OPTIONS = [
@@ -31,6 +39,27 @@ SUPPORT_OPTIONS = [
     "General Inquiry",
     "Other",
 ]
+
+
+def _log_audit(action, target_type, target_id=None, detail=None):
+    entry = AuditLog(
+        actor_user_id=current_user.id if current_user.is_authenticated else None,
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        detail=detail,
+    )
+    db.session.add(entry)
+
+
+def _load_json_file(path, default):
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                return json.load(handle)
+        except Exception:
+            return default
+    return default
 
 
 @main_bp.route("/")
@@ -106,6 +135,11 @@ def request_account():
         )
 
         db.session.add(new_request)
+        _log_audit(
+            "account_request_submitted",
+            "account_request",
+            detail=f"{requested_role}:{email}",
+        )
         db.session.commit()
 
         send_verification_email(new_request)
@@ -129,6 +163,7 @@ def verify_request_email(token):
         return redirect(url_for("main.home"))
 
     req.is_email_verified = True
+    _log_audit("account_request_verified", "account_request", req.id, req.email)
     db.session.commit()
 
     flash("Email verified successfully. Your request is now awaiting administrator approval.", "success")
@@ -251,10 +286,17 @@ def submit_feedback():
             support_type=support_type,
             subject=subject,
             status="open",
+            last_user_message_at=datetime.utcnow(),
+            last_read_by_user_at=datetime.utcnow() if current_user.is_authenticated else None,
             last_message_at=datetime.utcnow(),
         )
         db.session.add(conversation)
         db.session.flush()
+    else:
+        conversation.status = "open"
+        conversation.last_user_message_at = datetime.utcnow()
+        if current_user.is_authenticated:
+            conversation.last_read_by_user_at = datetime.utcnow()
 
     message = FeedbackMessage(
         conversation_id=conversation.id,
@@ -267,7 +309,15 @@ def submit_feedback():
     )
 
     conversation.last_message_at = datetime.utcnow()
+    if current_user.is_authenticated:
+        conversation.last_read_by_user_at = datetime.utcnow()
     db.session.add(message)
+    _log_audit(
+        "support_message_created",
+        "feedback_conversation",
+        conversation.id,
+        f"{support_type}:{subject}",
+    )
     db.session.commit()
 
     flash("Your support message has been sent successfully.", "success")
@@ -282,6 +332,11 @@ def my_support():
         .order_by(FeedbackConversation.last_message_at.desc())
         .all()
     )
+    now = datetime.utcnow()
+    for conversation in conversations:
+        conversation.last_read_by_user_at = now
+    if conversations:
+        db.session.commit()
     return render_template(
         "main/my_support.html",
         conversations=conversations,
@@ -296,6 +351,8 @@ def my_support_conversation(conversation_id):
         id=conversation_id,
         user_id=current_user.id,
     ).first_or_404()
+    conversation.last_read_by_user_at = datetime.utcnow()
+    db.session.commit()
 
     return render_template(
         "main/my_support_conversation.html",
@@ -332,8 +389,195 @@ def reply_support_conversation(conversation_id):
     )
 
     conversation.last_message_at = datetime.utcnow()
+    conversation.last_user_message_at = datetime.utcnow()
+    conversation.last_read_by_user_at = datetime.utcnow()
     db.session.add(message)
+    _log_audit(
+        "support_message_replied",
+        "feedback_conversation",
+        conversation.id,
+        conversation.subject,
+    )
     db.session.commit()
 
     flash("Your reply has been sent.", "success")
     return redirect(url_for("main.my_support_conversation", conversation_id=conversation.id))
+
+
+@main_bp.route("/notifications")
+@login_required
+def notifications():
+    items = []
+
+    if current_user.role == "admin":
+        pending_requests = AccountRequest.query.filter_by(status="pending").order_by(AccountRequest.created_at.desc()).limit(10).all()
+        open_support = FeedbackConversation.query.filter_by(status="open").order_by(FeedbackConversation.last_message_at.desc()).limit(10).all()
+        model_meta = _load_json_file(META_FILE, {"ready": False, "message": "Model metadata not available."})
+
+        for req in pending_requests:
+            items.append(
+                {
+                    "title": "Pending account request",
+                    "body": f"{req.full_name} requested {req.requested_role} access.",
+                    "link": url_for("admin.account_requests"),
+                    "timestamp": req.created_at,
+                    "badge": "text-bg-warning",
+                }
+            )
+        for conversation in open_support:
+            items.append(
+                {
+                    "title": "Open support conversation",
+                    "body": f"{conversation.subject} from {conversation.sender_name} is still open.",
+                    "link": url_for("admin.feedback_conversation_detail", conversation_id=conversation.id),
+                    "timestamp": conversation.last_message_at,
+                    "badge": "text-bg-danger" if conversation.last_user_message_at else "text-bg-secondary",
+                }
+            )
+        if not model_meta.get("ready"):
+            items.append(
+                {
+                    "title": "Model not ready",
+                    "body": model_meta.get("message", "Train the model from the ML control panel."),
+                    "link": url_for("admin.ml_control_panel"),
+                    "timestamp": None,
+                    "badge": "text-bg-dark",
+                }
+            )
+
+    elif current_user.role == "lecturer":
+        pending_records = (
+            AcademicRecord.query.join(Student, AcademicRecord.student_id == Student.id)
+            .filter(
+                Student.department_id == current_user.department_id,
+                AcademicRecord.is_verified == False,
+            )
+            .order_by(AcademicRecord.created_at.desc())
+            .limit(10)
+            .all()
+        ) if current_user.department_id else []
+
+        high_risk_predictions = (
+            RiskPrediction.query.join(Student, RiskPrediction.student_id == Student.id)
+            .filter(
+                Student.department_id == current_user.department_id,
+                RiskPrediction.predicted_risk == "High Risk",
+            )
+            .order_by(RiskPrediction.created_at.desc())
+            .limit(10)
+            .all()
+        ) if current_user.department_id else []
+
+        user_conversations = (
+            FeedbackConversation.query.filter_by(user_id=current_user.id)
+            .order_by(FeedbackConversation.last_message_at.desc())
+            .limit(10)
+            .all()
+        )
+
+        for record in pending_records:
+            items.append(
+                {
+                    "title": "Academic record awaiting verification",
+                    "body": f"{record.student.full_name} | {record.term_name} is pending your review.",
+                    "link": url_for("lecturer.academic_records"),
+                    "timestamp": record.created_at,
+                    "badge": "text-bg-warning",
+                }
+            )
+        for prediction in high_risk_predictions:
+            items.append(
+                {
+                    "title": "High-risk learner alert",
+                    "body": f"{prediction.student.full_name} was marked High Risk.",
+                    "link": url_for("students.detail", student_id=prediction.student_id),
+                    "timestamp": prediction.created_at,
+                    "badge": "text-bg-danger",
+                }
+            )
+        for conversation in user_conversations:
+            if conversation.last_admin_message_at and (
+                conversation.last_read_by_user_at is None
+                or conversation.last_admin_message_at > conversation.last_read_by_user_at
+            ):
+                items.append(
+                    {
+                        "title": "Unread support reply",
+                        "body": f"Admin replied to your support request: {conversation.subject}.",
+                        "link": url_for("main.my_support_conversation", conversation_id=conversation.id),
+                        "timestamp": conversation.last_admin_message_at,
+                        "badge": "text-bg-primary",
+                    }
+                )
+
+    elif current_user.role == "student":
+        student = Student.query.filter_by(user_id=current_user.id).first()
+        if not student and current_user.email:
+            student = Student.query.filter_by(email=current_user.email).first()
+
+        user_conversations = (
+            FeedbackConversation.query.filter_by(user_id=current_user.id)
+            .order_by(FeedbackConversation.last_message_at.desc())
+            .limit(10)
+            .all()
+        )
+        for conversation in user_conversations:
+            if conversation.last_admin_message_at and (
+                conversation.last_read_by_user_at is None
+                or conversation.last_admin_message_at > conversation.last_read_by_user_at
+            ):
+                items.append(
+                    {
+                        "title": "Unread support reply",
+                        "body": f"Admin replied to your support request: {conversation.subject}.",
+                        "link": url_for("main.my_support_conversation", conversation_id=conversation.id),
+                        "timestamp": conversation.last_admin_message_at,
+                        "badge": "text-bg-primary",
+                    }
+                )
+
+        if student:
+            planned_interventions = (
+                InterventionLog.query.filter_by(student_id=student.id, status="planned")
+                .order_by(InterventionLog.follow_up_date.asc(), InterventionLog.created_at.desc())
+                .limit(10)
+                .all()
+            )
+            predictions = (
+                RiskPrediction.query.filter_by(student_id=student.id)
+                .order_by(RiskPrediction.created_at.desc())
+                .limit(5)
+                .all()
+            )
+
+            for intervention in planned_interventions:
+                follow_up_label = intervention.follow_up_date.strftime("%d %b %Y") if intervention.follow_up_date else "No follow-up date"
+                items.append(
+                    {
+                        "title": "Pending intervention task",
+                        "body": f"{intervention.title} | Follow-up: {follow_up_label}.",
+                        "link": url_for("student_portal.interventions"),
+                        "timestamp": intervention.created_at,
+                        "badge": "text-bg-warning",
+                    }
+                )
+            for prediction in predictions:
+                if prediction.predicted_risk in {"High Risk", "Medium Risk"}:
+                    items.append(
+                        {
+                            "title": "Risk update",
+                            "body": f"Your latest prediction is {prediction.predicted_risk}. Review the recommendation and next steps.",
+                            "link": url_for("student_portal.dashboard"),
+                            "timestamp": prediction.created_at,
+                            "badge": "text-bg-danger" if prediction.predicted_risk == "High Risk" else "text-bg-warning",
+                        }
+                    )
+
+    dated_items = [item for item in items if item["timestamp"] is not None]
+    undated_items = [item for item in items if item["timestamp"] is None]
+    dated_items.sort(key=lambda item: item["timestamp"], reverse=True)
+
+    return render_template(
+        "main/notifications.html",
+        items=dated_items + undated_items,
+    )

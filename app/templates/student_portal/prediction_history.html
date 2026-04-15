@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Prediction History | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="panel-card p-4">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">History</div>
+      <h1 class="section-title">My Prediction History</h1>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Date</th><th>Risk</th><th>High Risk %</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        {% for prediction in predictions %}
+        <tr>
+          <td>{{ prediction.created_at.strftime('%d %b %Y') }}</td>
+          <td>{{ prediction.predicted_risk }}</td>
+          <td>{{ '%.2f'|format(prediction.high_risk_probability * 100) }}%</td>
+          <td>{{ prediction.recommendation }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty-state">No predictions have been saved yet.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -58,7 +58,7 @@ def dashboard():
             model_meta=model_meta,
         )
 
-    department = Department.query.get(current_user.department_id)
+    department = db.session.get(Department, current_user.department_id)
 
     students = (
         Student.query.filter_by(department_id=current_user.department_id)
@@ -92,6 +92,32 @@ def dashboard():
             .count()
         )
 
+    course_risk_rows = []
+    if students:
+        for student in students:
+            latest_prediction = (
+                RiskPrediction.query.filter_by(student_id=student.id)
+                .order_by(RiskPrediction.created_at.desc())
+                .first()
+            )
+            key = student.course.code if student.course else "N/A"
+            existing = next((row for row in course_risk_rows if row["course_code"] == key), None)
+            if not existing:
+                existing = {
+                    "course_code": student.course.code if student.course else "N/A",
+                    "course_name": student.course.name if student.course else "Unknown Course",
+                    "learners": 0,
+                    "high_risk": 0,
+                    "medium_risk": 0,
+                }
+                course_risk_rows.append(existing)
+
+            existing["learners"] += 1
+            if latest_prediction and latest_prediction.predicted_risk == "High Risk":
+                existing["high_risk"] += 1
+            elif latest_prediction and latest_prediction.predicted_risk == "Medium Risk":
+                existing["medium_risk"] += 1
+
     return render_template(
         "lecturer/dashboard.html",
         department=department,
@@ -102,6 +128,7 @@ def dashboard():
         medium_risk_count=medium_risk_count,
         pending_verifications=pending_verifications,
         model_meta=model_meta,
+        course_risk_rows=sorted(course_risk_rows, key=lambda item: (-item["high_risk"], item["course_code"])),
     )
 
 

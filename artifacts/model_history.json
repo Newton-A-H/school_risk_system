@@ -1,0 +1,12 @@
+[
+  {
+    "trained_at": "2026-04-15T21:04:48.859470+00:00",
+    "ready": false,
+    "record_count": 0,
+    "threshold": 0.55,
+    "test_f1_weighted": 0.0,
+    "test_balanced_accuracy": 0.0,
+    "message": "Not enough complete learner records to train the model yet.",
+    "label_distribution": {}
+  }
+]

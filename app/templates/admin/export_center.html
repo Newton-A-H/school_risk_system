@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Export Center | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Data Export</div>
+    <h1 class="page-title">Export Center</h1>
+    <p class="page-subtitle">Download the main parts of the system as CSV files whenever you need backups, review packs, or reporting extracts.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  {% for item in export_cards %}
+  <div class="col-md-6 col-xl-4">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Ready to Download</div>
+          <h4 class="section-title">{{ item.title }}</h4>
+        </div>
+        <span class="badge text-bg-light border">{{ item.count }} rows</span>
+      </div>
+      <p class="text-muted mb-4">{{ item.description }}</p>
+      <a href="{{ url_for('admin.export_center', dataset=item.slug) }}" class="btn btn-brand rounded-pill px-4">Download CSV</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

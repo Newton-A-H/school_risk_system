@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Academic History | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="panel-card p-4">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">History</div>
+      <h1 class="section-title">My Academic History</h1>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Term</th><th>Coursework</th><th>Exam</th><th>Final Mark</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for record in records %}
+        <tr>
+          <td>{{ record.term_name }}</td>
+          <td>{{ record.coursework_total }}</td>
+          <td>{{ record.exam_mark }}</td>
+          <td>{{ record.final_mark }}</td>
+          <td>{{ 'Verified' if record.is_verified else 'Pending' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty-state">No academic records have been added yet.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

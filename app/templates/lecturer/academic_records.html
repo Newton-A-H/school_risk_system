@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Verify Academic Records | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Verification</div>
+    <h1 class="page-title">Academic Records</h1>
+    <p class="page-subtitle">Check marks and attendance for learners in your department before they are marked as verified.</p>
+  </div>
+  <a href="{{ url_for('lecturer.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Dashboard</a>
+</div>
+
+<div class="panel-card p-4">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Review Queue</div>
+      <h4 class="section-title">Records Waiting for Verification</h4>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Learner</th>
+          <th>Programme</th>
+          <th>Term</th>
+          <th>Final Mark</th>
+          <th>Attendance</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in records %}
+        <tr>
+          <td>{{ record.student.full_name }}</td>
+          <td>{{ record.student.course.program_level }} in {{ record.student.course.name }}</td>
+          <td>{{ record.term_name }}</td>
+          <td>{{ record.final_mark }}</td>
+          <td>{{ record.attendance_percent }}%</td>
+          <td>
+            <span class="badge rounded-pill {{ 'text-bg-success' if record.is_verified else 'text-bg-warning' }}">
+              {{ 'Verified' if record.is_verified else 'Pending' }}
+            </span>
+          </td>
+          <td class="text-end">
+            {% if not record.is_verified %}
+            <form method="post" action="{{ url_for('lecturer.verify_record', record_id=record.id) }}">
+              <button type="submit" class="btn btn-sm btn-outline-success rounded-pill">Verify</button>
+            </form>
+            {% else %}
+            <span class="text-secondary small">
+              Verified{% if record.verifier %} by {{ record.verifier.full_name }}{% endif %}
+            </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7"><div class="empty-state">No academic records are waiting here right now.</div></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

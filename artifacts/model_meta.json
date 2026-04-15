@@ -1,17 +1,9 @@
 {
-  "classes": [
-    "Low Risk",
-    "Medium Risk",
-    "High Risk"
-  ],
-  "train_size": 0,
-  "test_size": 0,
-  "cv_f1_weighted_mean": 0.0,
-  "cv_f1_weighted_std": 0.0,
-  "test_f1_weighted": 0.0,
-  "test_balanced_accuracy": 0.0,
+  "ready": false,
+  "trained_at": "2026-04-15T21:04:48.859470+00:00",
+  "record_count": 0,
   "threshold": 0.55,
-  "features": [
+  "feature_columns": [
     "marks",
     "attendance_percent",
     "coursework_mark",
@@ -23,7 +15,7 @@
     "early_warning_helpful",
     "study_hours_per_week"
   ],
-  "record_count": 4,
-  "ready": false,
-  "message": "Model not trained yet. At least 20 student records are required."
+  "message": "Not enough complete learner records to train the model yet.",
+  "test_f1_weighted": 0.0,
+  "test_balanced_accuracy": 0.0
 }

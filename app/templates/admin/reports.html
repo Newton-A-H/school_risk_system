@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block title %}Reports | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Reporting</div>
+    <h1 class="page-title">Reports</h1>
+    <p class="page-subtitle">See what is happening across the school, from risk levels to support follow-up and verification work.</p>
+  </div>
+  <a href="{{ url_for('admin.reports', department_id=filters.department_id, risk_level=filters.risk_level, semester=filters.semester, export='csv') }}" class="btn btn-outline-primary rounded-pill px-4">Export CSV</a>
+</div>
+
+<div class="filter-shell mb-4">
+  <form method="get" class="row g-3">
+    <div class="col-md-4">
+      <select name="department_id" class="form-select">
+        <option value="">All departments</option>
+        {% for department in departments %}
+        <option value="{{ department.id }}" {{ 'selected' if filters.department_id == department.id else '' }}>{{ department.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <select name="risk_level" class="form-select">
+        <option value="">All risk levels</option>
+        {% for level in ['Low Risk', 'Medium Risk', 'High Risk'] %}
+        <option value="{{ level }}" {{ 'selected' if filters.risk_level == level else '' }}>{{ level }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <input type="text" name="semester" class="form-control" placeholder="Semester" value="{{ filters.semester }}">
+    </div>
+    <div class="col-md-1 d-grid">
+      <button type="submit" class="btn btn-outline-primary">Apply</button>
+    </div>
+  </form>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3"><div class="stat-card"><span>Learners</span><h2>{{ learner_count }}</h2></div></div>
+  <div class="col-md-3"><div class="stat-card"><span>Predictions</span><h2>{{ prediction_count }}</h2></div></div>
+  <div class="col-md-3"><div class="stat-card"><span>Open Support</span><h2>{{ unresolved_support|length }}</h2></div></div>
+  <div class="col-md-3"><div class="stat-card"><span>Pending Verification</span><h2>{{ verification_pending|length }}</h2></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Follow-up</div>
+          <h4 class="section-title">Intervention Summary</h4>
+        </div>
+      </div>
+      <div class="d-flex gap-3 flex-wrap">
+        <span class="badge text-bg-warning rounded-pill px-3 py-2">Planned: {{ intervention_summary.get('planned', 0) }}</span>
+        <span class="badge text-bg-success rounded-pill px-3 py-2">Completed: {{ intervention_summary.get('completed', 0) }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">By Course</div>
+          <h4 class="section-title">Course Risk Snapshot</h4>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Course</th><th>High</th><th>Medium</th><th>Low</th></tr></thead>
+          <tbody>
+            {% for course_name, counts in course_summary.items() %}
+            <tr>
+              <td>{{ course_name }}</td>
+              <td>{{ counts.get('High Risk', 0) }}</td>
+              <td>{{ counts.get('Medium Risk', 0) }}</td>
+              <td>{{ counts.get('Low Risk', 0) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4"><div class="empty-state">No course-level prediction data is available yet.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Whole School</div>
+          <h4 class="section-title">Risk Summary</h4>
+        </div>
+      </div>
+      <ul class="soft-list">
+        {% for level, count in risk_summary.items() %}
+        <li><strong>{{ level }}</strong><div class="text-secondary small">{{ count }} learner{{ '' if count == 1 else 's' }}</div></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">By Department</div>
+          <h4 class="section-title">Department Risk Summary</h4>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Department</th><th>Low</th><th>Medium</th><th>High</th></tr></thead>
+          <tbody>
+            {% for dept_name, counts in department_summary.items() %}
+            <tr>
+              <td>{{ dept_name }}</td>
+              <td>{{ counts.get('Low Risk', 0) }}</td>
+              <td>{{ counts.get('Medium Risk', 0) }}</td>
+              <td>{{ counts.get('High Risk', 0) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4"><div class="empty-state">No department risk data is available yet.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Support</div>
+          <h4 class="section-title">Open Support Cases</h4>
+        </div>
+      </div>
+      <ul class="soft-list">
+        {% for conversation in unresolved_support[:10] %}
+        <li><strong>{{ conversation.subject }}</strong><div class="text-secondary small">{{ conversation.sender_name }}</div></li>
+        {% else %}
+        <li><div class="empty-state">There are no open support cases right now.</div></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Verification</div>
+          <h4 class="section-title">Records Still Waiting for Review</h4>
+        </div>
+      </div>
+      <ul class="soft-list">
+        {% for record in verification_pending[:10] %}
+        <li><strong>{{ record.student.full_name }}</strong><div class="text-secondary small">{{ record.term_name }} is still waiting for verification.</div></li>
+        {% else %}
+        <li><div class="empty-state">All current records have been verified.</div></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

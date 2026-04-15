@@ -5,12 +5,11 @@
 <div class="row justify-content-center">
   <div class="col-xl-9 col-lg-10">
     <div class="panel-card p-4 p-lg-5">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div>
-          <h1 class="fw-bold mb-1">New Learner Intake</h1>
-          <p class="text-secondary mb-0">
-            Create the learner record and the student login account at the same time.
-          </p>
+      <div class="page-header">
+        <div class="page-header-copy">
+          <div class="page-eyebrow">Admissions</div>
+          <h1 class="page-title">New Learner Intake</h1>
+          <p class="page-subtitle">Add the learner record and create the student login in one step.</p>
         </div>
         <a href="{{ url_for('students.index') }}" class="btn btn-outline-secondary rounded-pill px-4">Back</a>
       </div>
@@ -72,12 +71,12 @@
           <div class="col-md-6">
             <label class="form-label">Temporary Password</label>
             <input type="text" name="temporary_password" class="form-control" required>
-            <div class="form-text">The learner will be required to change this after first login.</div>
+            <div class="form-text">The student will be asked to change this after signing in for the first time.</div>
           </div>
         </div>
 
         <div class="mt-4 d-flex gap-2">
-          <button type="submit" class="btn btn-brand rounded-pill px-4">Create Learner + Account</button>
+          <button type="submit" class="btn btn-brand rounded-pill px-4">Create Learner and Account</button>
           <a href="{{ url_for('students.index') }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
         </div>
       </form>

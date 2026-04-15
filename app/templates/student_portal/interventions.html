@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}My Interventions | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="panel-card p-4">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Follow-up</div>
+      <h1 class="section-title">My Support Tasks</h1>
+    </div>
+  </div>
+  <div class="d-grid gap-3">
+    {% for item in interventions %}
+    <div class="border rounded-4 p-3 bg-white">
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+        <div>
+          <div class="fw-semibold">{{ item.title }}</div>
+          <div class="text-secondary small">{{ item.created_at.strftime('%d %b %Y') }}</div>
+        </div>
+        <span class="badge rounded-pill {{ 'text-bg-success' if item.status == 'completed' else 'text-bg-warning' }}">{{ item.status }}</span>
+      </div>
+      <div class="text-secondary small mb-2">{{ item.note }}</div>
+      {% if item.follow_up_date %}<div class="small mb-2"><strong>Follow-up:</strong> {{ item.follow_up_date.strftime('%d %b %Y') }}</div>{% endif %}
+      {% if item.outcome_note %}<div class="small"><strong>Outcome:</strong> {{ item.outcome_note }}</div>{% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-light border mb-0">There are no support tasks for you right now.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

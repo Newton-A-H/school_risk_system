@@ -19,6 +19,7 @@ ARTIFACTS_DIR = "artifacts"
 MODEL_FILE = os.path.join(ARTIFACTS_DIR, "best_model.pkl")
 META_FILE = os.path.join(ARTIFACTS_DIR, "model_meta.json")
 IMPORTANCE_FILE = os.path.join(ARTIFACTS_DIR, "feature_importance.json")
+HISTORY_FILE = os.path.join(ARTIFACTS_DIR, "model_history.json")
 
 
 FEATURE_COLUMNS = [
@@ -53,6 +54,39 @@ CATEGORICAL_FEATURES = [
 
 def _ensure_artifacts_dir():
     os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+
+
+def _write_artifacts(meta, importance):
+    with open(META_FILE, "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2)
+
+    with open(IMPORTANCE_FILE, "w", encoding="utf-8") as f:
+        json.dump(importance, f, indent=2)
+
+
+def _append_history(meta):
+    history = []
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                history = json.load(f) or []
+        except Exception:
+            history = []
+
+    history_entry = {
+        "trained_at": meta.get("trained_at"),
+        "ready": bool(meta.get("ready")),
+        "record_count": int(meta.get("record_count", 0)),
+        "threshold": float(meta.get("threshold", 0.55)),
+        "test_f1_weighted": float(meta.get("test_f1_weighted", 0.0)),
+        "test_balanced_accuracy": float(meta.get("test_balanced_accuracy", 0.0)),
+        "message": meta.get("message", ""),
+        "label_distribution": meta.get("label_distribution", {}),
+    }
+    history.insert(0, history_entry)
+
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history[:20], f, indent=2)
 
 
 def _derive_risk_label(final_mark, attendance_percent, coursework_total, study_hours, main_challenge, coursework_on_time):
@@ -149,12 +183,14 @@ def _build_dataframe():
 
 def train_and_save_model():
     _ensure_artifacts_dir()
+    trained_at = pd.Timestamp.utcnow().isoformat()
 
     df = _build_dataframe()
 
     if df.empty or len(df) < 12:
         meta = {
             "ready": False,
+            "trained_at": trained_at,
             "record_count": int(len(df)),
             "threshold": 0.55,
             "feature_columns": FEATURE_COLUMNS,
@@ -162,13 +198,8 @@ def train_and_save_model():
             "test_f1_weighted": 0.0,
             "test_balanced_accuracy": 0.0,
         }
-
-        with open(META_FILE, "w", encoding="utf-8") as f:
-            json.dump(meta, f, indent=2)
-
-        with open(IMPORTANCE_FILE, "w", encoding="utf-8") as f:
-            json.dump({}, f, indent=2)
-
+        _write_artifacts(meta, {})
+        _append_history(meta)
         return meta
 
     X = df[FEATURE_COLUMNS]
@@ -177,6 +208,7 @@ def train_and_save_model():
     if len(set(y)) < 2:
         meta = {
             "ready": False,
+            "trained_at": trained_at,
             "record_count": int(len(df)),
             "threshold": 0.55,
             "feature_columns": FEATURE_COLUMNS,
@@ -184,13 +216,8 @@ def train_and_save_model():
             "test_f1_weighted": 0.0,
             "test_balanced_accuracy": 0.0,
         }
-
-        with open(META_FILE, "w", encoding="utf-8") as f:
-            json.dump(meta, f, indent=2)
-
-        with open(IMPORTANCE_FILE, "w", encoding="utf-8") as f:
-            json.dump({}, f, indent=2)
-
+        _write_artifacts(meta, {})
+        _append_history(meta)
         return meta
 
     stratify_target = y if y.value_counts().min() >= 2 else None
@@ -284,6 +311,7 @@ def train_and_save_model():
 
     meta = {
         "ready": True,
+        "trained_at": trained_at,
         "record_count": int(len(df)),
         "threshold": threshold,
         "feature_columns": FEATURE_COLUMNS,
@@ -295,11 +323,7 @@ def train_and_save_model():
     }
 
     joblib.dump(model, MODEL_FILE)
-
-    with open(META_FILE, "w", encoding="utf-8") as f:
-        json.dump(meta, f, indent=2)
-
-    with open(IMPORTANCE_FILE, "w", encoding="utf-8") as f:
-        json.dump(grouped_importance, f, indent=2)
+    _write_artifacts(meta, grouped_importance)
+    _append_history(meta)
 
     return meta

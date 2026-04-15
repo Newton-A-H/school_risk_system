@@ -1,4 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+import csv
+from io import StringIO
+
+from flask import Blueprint, render_template, redirect, url_for, flash, request, Response
 from flask_login import login_required, current_user
 
 from ..extensions import db
@@ -10,6 +13,7 @@ from ..models import (
     QuestionnaireResponse,
     RiskPrediction,
     User,
+    InterventionLog,
 )
 from ..utils.decorators import role_required
 from ..services.advisory import generate_advisory
@@ -23,19 +27,72 @@ students_bp = Blueprint("students", __name__, url_prefix="/students")
 @login_required
 @role_required("admin", "lecturer")
 def index():
-    if current_user.role == "lecturer":
-        if current_user.department_id:
-            students = (
-                Student.query.filter_by(department_id=current_user.department_id)
-                .order_by(Student.created_at.desc())
-                .all()
-            )
-        else:
-            students = []
-    else:
-        students = Student.query.order_by(Student.created_at.desc()).all()
+    search = request.args.get("search", "").strip()
+    course_id = request.args.get("course_id", type=int)
+    year = request.args.get("year", type=int)
+    semester = request.args.get("semester", "").strip()
+    risk_level = request.args.get("risk_level", "").strip()
+    export = request.args.get("export", "").strip().lower()
 
-    return render_template("students/index.html", students=students)
+    if current_user.role == "lecturer":
+        if not current_user.department_id:
+            students = []
+            courses = []
+            return render_template(
+                "students/index.html",
+                students=students,
+                courses=courses,
+                filters={"search": search, "course_id": course_id, "year": year, "semester": semester, "risk_level": risk_level},
+            )
+        query = Student.query.filter_by(department_id=current_user.department_id)
+        courses = Course.query.filter_by(department_id=current_user.department_id).order_by(Course.name.asc()).all()
+    else:
+        query = Student.query
+        courses = Course.query.order_by(Course.name.asc()).all()
+
+    if search:
+        like_value = f"%{search}%"
+        query = query.filter(
+            (Student.full_name.ilike(like_value)) |
+            (Student.admission_no.ilike(like_value))
+        )
+    if course_id:
+        query = query.filter(Student.course_id == course_id)
+    if year:
+        query = query.filter(Student.year_of_study == year)
+    if semester:
+        query = query.filter(Student.semester == semester)
+    if risk_level:
+        query = query.join(RiskPrediction, RiskPrediction.student_id == Student.id).filter(RiskPrediction.predicted_risk == risk_level).distinct()
+
+    students = query.order_by(Student.created_at.desc()).all()
+
+    if export == "csv":
+        buffer = StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(["Admission No", "Full Name", "Department", "Course", "Year", "Semester"])
+        for student in students:
+            writer.writerow([
+                student.admission_no,
+                student.full_name,
+                student.department.name if student.department else "",
+                student.course.name if student.course else "",
+                student.year_of_study,
+                student.semester,
+            ])
+        filename = "department_learners.csv" if current_user.role == "lecturer" else "all_learners.csv"
+        return Response(
+            buffer.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+
+    return render_template(
+        "students/index.html",
+        students=students,
+        courses=courses,
+        filters={"search": search, "course_id": course_id, "year": year, "semester": semester, "risk_level": risk_level},
+    )
 
 
 @students_bp.route("/new", methods=["GET", "POST"])
@@ -145,6 +202,12 @@ def detail(student_id):
             response,
         )
 
+    interventions = (
+        InterventionLog.query.filter_by(student_id=student.id)
+        .order_by(InterventionLog.created_at.desc())
+        .all()
+    )
+
     return render_template(
         "students/detail.html",
         student=student,
@@ -152,6 +215,7 @@ def detail(student_id):
         response=response,
         prediction=prediction,
         advisory=advisory,
+        interventions=interventions,
     )
 
 
@@ -341,3 +405,65 @@ def delete(student_id):
 
     flash("Learner record deleted successfully.", "success")
     return redirect(url_for("students.index"))
+
+
+@students_bp.route("/<int:student_id>/interventions/new", methods=["POST"])
+@login_required
+@role_required("admin", "lecturer")
+def add_intervention(student_id):
+    query = Student.query
+    if current_user.role == "lecturer":
+        query = query.filter_by(department_id=current_user.department_id)
+
+    student = query.filter_by(id=student_id).first_or_404()
+    title = request.form.get("title", "").strip()
+    note = request.form.get("note", "").strip()
+    follow_up_date = request.form.get("follow_up_date", "").strip()
+
+    if not title or not note:
+        flash("Intervention title and note are required.", "danger")
+        return redirect(url_for("students.detail", student_id=student.id))
+
+    follow_up_value = None
+    if follow_up_date:
+        from datetime import datetime
+        try:
+            follow_up_value = datetime.strptime(follow_up_date, "%Y-%m-%d")
+        except ValueError:
+            flash("Follow-up date must be valid.", "danger")
+            return redirect(url_for("students.detail", student_id=student.id))
+
+    item = InterventionLog(
+        student_id=student.id,
+        created_by=current_user.id,
+        title=title,
+        note=note,
+        status="planned",
+        follow_up_date=follow_up_value,
+    )
+    db.session.add(item)
+    db.session.commit()
+
+    flash("Intervention note added.", "success")
+    return redirect(url_for("students.detail", student_id=student.id))
+
+
+@students_bp.route("/interventions/<int:intervention_id>/complete", methods=["POST"])
+@login_required
+@role_required("admin", "lecturer")
+def complete_intervention(intervention_id):
+    query = InterventionLog.query.join(Student, InterventionLog.student_id == Student.id)
+    if current_user.role == "lecturer":
+        query = query.filter(Student.department_id == current_user.department_id)
+
+    intervention = query.filter(InterventionLog.id == intervention_id).first_or_404()
+    outcome_note = request.form.get("outcome_note", "").strip()
+
+    from datetime import datetime
+    intervention.status = "completed"
+    intervention.completed_at = datetime.utcnow()
+    intervention.outcome_note = outcome_note or intervention.outcome_note
+    db.session.commit()
+
+    flash("Intervention marked as completed.", "success")
+    return redirect(url_for("students.detail", student_id=intervention.student_id))

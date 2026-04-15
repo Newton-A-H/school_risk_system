@@ -2,22 +2,27 @@
 {% block title %}Manage Accounts | EduSentinel AI{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="fw-bold mb-1">Manage Accounts</h1>
-    <p class="text-secondary mb-0">Create lecturer accounts, manage users, and review account requests.</p>
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">User Management</div>
+    <h1 class="page-title">Accounts</h1>
+    <p class="page-subtitle">Add staff accounts, check student logins, and keep up with access requests.</p>
   </div>
-  <div class="d-flex gap-2 flex-wrap">
+  <div class="header-actions">
     <a href="{{ url_for('admin.create_lecturer') }}" class="btn btn-brand rounded-pill px-4">Add Lecturer</a>
-    <a href="{{ url_for('students.create') }}" class="btn btn-outline-primary rounded-pill px-4">Add Learner + Student Account</a>
+    <a href="{{ url_for('students.create') }}" class="btn btn-outline-primary rounded-pill px-4">Add Learner and Login</a>
+    <a href="{{ url_for('admin.bulk_imports') }}" class="btn btn-outline-secondary rounded-pill px-4">Import from CSV</a>
   </div>
 </div>
 
 <div class="row g-4 mb-4">
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Lecturer Accounts</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Staff</div>
+          <h4 class="section-title">Lecturer Accounts</h4>
+        </div>
         <span class="badge text-bg-light">{{ lecturers|length }}</span>
       </div>
 
@@ -44,7 +49,16 @@
                 </span>
               </td>
               <td class="text-end">
-                <div class="d-flex gap-2 justify-content-end">
+                <div class="d-flex gap-2 justify-content-end flex-wrap">
+                  <form method="post" action="{{ url_for('admin.link_lecturer_department', user_id=lecturer.id) }}" class="d-flex gap-2">
+                    <select name="department_id" class="form-select form-select-sm" style="min-width: 180px;" required>
+                      <option value="">Link department</option>
+                      {% for department in departments %}
+                      <option value="{{ department.id }}" {{ 'selected' if lecturer.department_id == department.id else '' }}>{{ department.name }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill">Save</button>
+                  </form>
                   <form method="post" action="{{ url_for('admin.reset_password', user_id=lecturer.id) }}">
                     <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill">Reset Password</button>
                   </form>
@@ -56,7 +70,7 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="5" class="text-secondary">No lecturer accounts available.</td>
+              <td colspan="5"><div class="empty-state">No lecturer accounts yet.</div></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -67,8 +81,11 @@
 
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Student User Accounts</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Students</div>
+          <h4 class="section-title">Student Login Accounts</h4>
+        </div>
         <span class="badge text-bg-light">{{ student_users|length }}</span>
       </div>
 
@@ -105,7 +122,7 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="4" class="text-secondary">No student user accounts available.</td>
+              <td colspan="4"><div class="empty-state">No student login accounts yet.</div></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -118,9 +135,12 @@
 <div class="row g-4">
   <div class="col-12">
     <div class="panel-card p-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Account Requests</h4>
-        <a href="{{ url_for('admin.account_requests') }}" class="btn btn-sm btn-outline-primary rounded-pill">Open Requests</a>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Requests</div>
+          <h4 class="section-title">Recent Account Requests</h4>
+        </div>
+        <a href="{{ url_for('admin.account_requests') }}" class="btn btn-sm btn-outline-primary rounded-pill">See All Requests</a>
       </div>
 
       <div class="table-responsive">
@@ -149,7 +169,7 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="5" class="text-secondary">No account requests available.</td>
+              <td colspan="5"><div class="empty-state">No account requests at the moment.</div></td>
             </tr>
             {% endfor %}
           </tbody>

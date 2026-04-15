@@ -1,11 +1,12 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block title %}My Support Messages | EduSentinel AI{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="fw-bold mb-1">My Support Messages</h1>
-    <p class="text-secondary mb-0">View your support history and open conversations.</p>
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Support</div>
+    <h1 class="page-title">My Messages</h1>
+    <p class="page-subtitle">Check previous conversations and open a new message when you need help.</p>
   </div>
   <button type="button" class="btn btn-brand rounded-pill px-4" onclick="toggleChatPopup()">New Support Message</button>
 </div>
@@ -14,16 +15,22 @@
   {% for conversation in conversations %}
   <div class="col-12">
     <div class="panel-card p-4">
-      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+      <div class="section-head">
         <div>
-          <h4 class="mb-1">{{ conversation.subject }}</h4>
+          <div class="section-kicker">Conversation</div>
+          <h4 class="section-title">{{ conversation.subject }}</h4>
           <div class="text-secondary small">
-            Type: {{ conversation.support_type }} • Last activity: {{ conversation.last_message_at.strftime('%d %b %Y %H:%M') }}
+            {{ conversation.support_type }} | Last update: {{ conversation.last_message_at.strftime('%d %b %Y %H:%M') }}
           </div>
         </div>
-        <span class="badge rounded-pill {{ 'text-bg-warning' if conversation.status == 'open' else 'text-bg-secondary' }}">
-          {{ conversation.status }}
-        </span>
+        <div class="d-flex gap-2 flex-wrap">
+          {% if conversation.last_admin_message_at and (not conversation.last_read_by_user_at or conversation.last_admin_message_at > conversation.last_read_by_user_at) %}
+          <span class="badge rounded-pill text-bg-danger">Unread Reply</span>
+          {% endif %}
+          <span class="badge rounded-pill {{ 'text-bg-warning' if conversation.status == 'open' else 'text-bg-secondary' }}">
+            {{ conversation.status }}
+          </span>
+        </div>
       </div>
 
       <div class="text-secondary small mb-3">
@@ -38,7 +45,7 @@
   {% else %}
   <div class="col-12">
     <div class="panel-card p-4">
-      <div class="text-secondary">You do not have any support conversations yet.</div>
+      <div class="empty-state">You have not started any support conversations yet.</div>
     </div>
   </div>
   {% endfor %}

@@ -7,7 +7,7 @@ from .extensions import db, login_manager
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
 class Department(db.Model):
@@ -140,6 +140,12 @@ class Student(db.Model):
         lazy=True,
         cascade="all, delete-orphan",
     )
+    interventions = db.relationship(
+        "InterventionLog",
+        backref="student",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
 
 
 class AcademicRecord(db.Model):
@@ -244,6 +250,10 @@ class FeedbackConversation(db.Model):
     subject = db.Column(db.String(200), nullable=False, default="General Support")
 
     status = db.Column(db.String(30), nullable=False, default="open")
+    last_user_message_at = db.Column(db.DateTime, nullable=True)
+    last_admin_message_at = db.Column(db.DateTime, nullable=True)
+    last_read_by_user_at = db.Column(db.DateTime, nullable=True)
+    last_read_by_admin_at = db.Column(db.DateTime, nullable=True)
     last_message_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
@@ -271,3 +281,42 @@ class FeedbackMessage(db.Model):
 
     is_admin_reply = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+
+class InterventionLog(db.Model):
+    __tablename__ = "intervention_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+    title = db.Column(db.String(150), nullable=False)
+    note = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(30), nullable=False, default="planned")
+    follow_up_date = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    outcome_note = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    author = db.relationship("User", foreign_keys=[created_by])
+
+
+class AuditLog(db.Model):
+    __tablename__ = "audit_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    actor_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    action = db.Column(db.String(120), nullable=False)
+    target_type = db.Column(db.String(80), nullable=False)
+    target_id = db.Column(db.Integer, nullable=True)
+    detail = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    actor = db.relationship("User", foreign_keys=[actor_user_id])

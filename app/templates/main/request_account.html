@@ -5,12 +5,11 @@
 <div class="row justify-content-center">
   <div class="col-xl-9 col-lg-10">
     <div class="panel-card p-4 p-lg-5">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div>
-          <h1 class="fw-bold mb-1">Request Account Creation</h1>
-          <p class="text-secondary mb-0">
-            Students and lecturers can request access here. After email verification and admin approval, the appropriate account and record will be created automatically.
-          </p>
+      <div class="page-header">
+        <div class="page-header-copy">
+          <div class="page-eyebrow">Access Request</div>
+          <h1 class="page-title">Request an Account</h1>
+          <p class="page-subtitle">Students and lecturers can ask for access here. Once your email is confirmed and the request is approved, your account will be prepared for you.</p>
         </div>
         <a href="{{ url_for('main.home') }}" class="btn btn-outline-secondary rounded-pill px-4">Back Home</a>
       </div>
@@ -80,16 +79,14 @@
         </div>
 
         <div class="alert alert-light border mt-4 mb-4">
-          After approval:
-          <br>
-          <strong>Student request:</strong> the student account and learner record will be linked automatically.
-          <br>
-          <strong>Lecturer request:</strong> the lecturer account will be created and assigned to the selected department.
+          <strong>What happens next?</strong><br>
+          If you are a student, your login will be linked to your learner record.<br>
+          If you are a lecturer, your account will be attached to the department you selected.
         </div>
 
         <div class="d-flex flex-wrap gap-2">
-          <button type="submit" class="btn btn-brand rounded-pill px-4">Submit Request</button>
-          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4">Go to Login</a>
+          <button type="submit" class="btn btn-brand rounded-pill px-4">Send Request</button>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Login</a>
         </div>
       </form>
     </div>

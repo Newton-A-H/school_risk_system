@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Model Status | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Model Management</div>
+    <h1 class="page-title">Model Status</h1>
+    <p class="page-subtitle">Check whether the model is ready, review the latest scores, and retrain when you need fresh results.</p>
+  </div>
+  <form method="post">
+    <button type="submit" class="btn btn-brand rounded-pill px-4">Train Again</button>
+  </form>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3"><div class="stat-card"><span>Ready</span><h2>{{ 'Yes' if model_meta.get('ready') else 'No' }}</h2></div></div>
+  <div class="col-md-3"><div class="stat-card"><span>Record Count</span><h2>{{ model_meta.get('record_count', 0) }}</h2></div></div>
+  <div class="col-md-3"><div class="stat-card"><span>Weighted F1</span><h2>{{ '%.2f'|format(model_meta.get('test_f1_weighted', 0)) }}</h2></div></div>
+  <div class="col-md-3"><div class="stat-card"><span>Balanced Accuracy</span><h2>{{ '%.2f'|format(model_meta.get('test_balanced_accuracy', 0)) }}</h2></div></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Latest Update</div>
+          <h4 class="section-title">Model Notes</h4>
+        </div>
+      </div>
+      <div class="alert alert-light border mb-0">{{ model_meta.get('message', 'No model details are available yet.') }}</div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">What Matters Most</div>
+          <h4 class="section-title">Feature Importance</h4>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Feature</th><th>Score</th></tr></thead>
+          <tbody>
+            {% for feature, score in feature_importance.items()|sort(attribute='1', reverse=True) %}
+            <tr><td>{{ feature.replace('_', ' ').title() }}</td><td>{{ '%.4f'|format(score) }}</td></tr>
+            {% else %}
+            <tr><td colspan="2"><div class="empty-state">Feature importance is not available yet.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel-card p-4 mt-4">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Training Timeline</div>
+      <h4 class="section-title">Recent Model Runs</h4>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Records</th>
+          <th>Weighted F1</th>
+          <th>Balanced Accuracy</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in model_history %}
+        <tr>
+          <td>{{ run.get('trained_at', 'Unknown') }}</td>
+          <td>
+            <span class="badge {{ 'text-bg-success' if run.get('ready') else 'text-bg-warning' }}">
+              {{ 'Ready' if run.get('ready') else 'Needs More Data' }}
+            </span>
+          </td>
+          <td>{{ run.get('record_count', 0) }}</td>
+          <td>{{ '%.2f'|format(run.get('test_f1_weighted', 0)) }}</td>
+          <td>{{ '%.2f'|format(run.get('test_balanced_accuracy', 0)) }}</td>
+          <td>{{ run.get('message', 'No notes saved.') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state">Training runs will appear here after the first model check or retraining action.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

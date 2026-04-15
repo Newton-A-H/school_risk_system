@@ -1,98 +1,135 @@
-# EduRisk AI - Academic Risk Prediction and Advisory System
+# EduSentinel AI
 
-A professional Flask + SQL Server school system built around Kenyan school usage. It uses marks instead of GPA, stores all operational data in SQL, includes the proposal questionnaire, and provides AI-driven risk prediction and advisory support.
+EduSentinel AI is a Flask + SQL Server academic risk monitoring platform with role-based experiences for admins, lecturers, and students. It combines learner records, semester questionnaires, prediction history, intervention tracking, support conversations, and model-management pages in one school-focused system.
 
-## Core professional features
-- SQL Server only for live system data
-- Responsive Bootstrap 5 interface with custom styling
-- Questionnaire-aware risk assessment
-- Proper ML workflow: train/test split, cross-validation, hyperparameter tuning, probability calibration, threshold tuning, explainability, saved artifacts
-- School-ready learner intake and prediction pages
-- Chart.js dashboard with corrected chart configuration
-- Cloud-ready structure for later deployment
+## What the current build includes
 
-## Folder structure
+- Public account request flow with email verification and admin approval
+- Admin, lecturer, and student role-based dashboards
+- Learner intake, academic-record capture, questionnaire capture, and semester prediction flow
+- Intervention logs with follow-up tracking
+- Support desk with threaded conversations, unread badges, and close/reopen controls
+- Student self-service pages for profile, academic history, questionnaire history, prediction history, and interventions
+- Admin reporting with filters and CSV export
+- Admin ML control page with readiness metrics, feature importance, and retrain action
+- Audit trail for key admin/support/account actions
+
+## Project structure
+
 ```text
 school_risk_system/
-├── app/
-│   ├── __init__.py
-│   ├── config.py
-│   ├── extensions.py
-│   ├── forms.py
-│   ├── models.py
-│   ├── auth/
-│   │   └── routes.py
-│   ├── main/
-│   │   └── routes.py
-│   ├── students/
-│   │   └── routes.py
-│   ├── ml/
-│   │   ├── predictor.py
-│   │   └── training.py
-│   ├── services/
-│   │   ├── advisory.py
-│   │   └── charts.py
-│   ├── static/
-│   │   ├── css/app.css
-│   │   └── js/dashboard.js
-│   └── templates/
-│       ├── base.html
-│       ├── auth/login.html
-│       ├── main/home.html
-│       ├── main/dashboard.html
-│       └── students/
-│           ├── detail.html
-│           ├── index.html
-│           └── new.html
-├── sql/
-│   ├── schema_mssql.sql
-│   └── seed.sql
-├── .env.example
-├── requirements.txt
-├── README.md
-└── run.py
+|-- app/
+|   |-- __init__.py
+|   |-- config.py
+|   |-- models.py
+|   |-- auth/
+|   |-- admin/
+|   |-- lecturer/
+|   |-- main/
+|   |-- student_portal/
+|   |-- students/
+|   |-- ml/
+|   |-- services/
+|   |-- static/
+|   `-- templates/
+|-- artifacts/
+|-- migrations/
+|-- sql/
+|-- tests/
+|-- AGENTS.md
+|-- requirements.txt
+`-- run.py
 ```
 
-## How to use with SSMS and SQL Server
-1. Open SQL Server Management Studio.
-2. Connect to your local SQL Server instance.
-3. Open `sql/schema_mssql.sql` and execute it. This creates `AcademicRiskDB` and all tables.
-4. In Windows search, open **ODBC Data Sources (64-bit)** and confirm you have **ODBC Driver 17 for SQL Server** or newer installed.
-5. Create a Python virtual environment and install packages:
-   - `python -m venv venv`
-   - `venv\Scripts\activate`
-   - `pip install -r requirements.txt`
-6. Copy `.env.example` to `.env` and update `DATABASE_URL` with your SQL Server username, password, server name, and database.
-7. Start the app with `python run.py`.
-8. Open the site in your browser.
+## Local setup
 
-## Create first real admin password
-Because Werkzeug hashes are generated in Python, use Flask shell after first run:
+1. Create and activate a virtual environment.
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\activate
+   ```
+2. Install dependencies.
+   ```powershell
+   pip install -r requirements.txt
+   ```
+3. Copy `.env.example` to `.env` and fill in your SQL Server and mail settings.
+4. Start the app.
+   ```powershell
+   python run.py
+   ```
+5. Open the local URL shown by Flask in your browser.
+
+## Environment variables
+
+Minimum required values:
+
+```env
+SECRET_KEY=change-me
+DATABASE_URL=mssql+pyodbc://sa:YourPassword123@localhost/AcademicRiskDB?driver=ODBC+Driver+17+for+SQL+Server&TrustServerCertificate=yes
+```
+
+Optional operational settings:
+
+```env
+MAIL_ENABLED=false
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_DEFAULT_SENDER=noreply@edusentinel.ai
+BOOTSTRAP_DATABASE=true
+VALIDATE_STARTUP=true
+SESSION_COOKIE_SECURE=false
+```
+
+## First admin setup
+
+After the database is reachable, create the first admin from a Python shell:
+
 ```python
 from app import create_app
 from app.extensions import db
 from app.models import User
+
 app = create_app()
 with app.app_context():
-    admin = User(full_name='System Administrator', email='admin@school.local', role='admin')
-    admin.set_password('Admin@12345')
+    admin = User(full_name="System Administrator", email="admin@school.local", role="admin")
+    admin.set_password("Admin@12345")
     db.session.add(admin)
     db.session.commit()
 ```
-Then sign in with `admin@school.local`.
 
-## Notes about the questionnaire
-This system uses the proposal questionnaire items directly:
-- How often do you attend classes?
-- Do you submit coursework on time?
-- What challenge affects your academic performance most?
-- Would early academic warnings help you improve?
-These are combined with marks, attendance, coursework, exams, and study hours.
+## Running tests
 
-## Why this is stronger than the older version
-- No JSON storage
-- No GPA assumption
-- Better dashboard charts
-- Professional UI and layout
-- Proper machine learning lifecycle
-- Easier migration to cloud hosting later
+The test suite uses SQLite and disables SQL Server bootstrap automatically.
+
+```powershell
+pytest
+```
+
+Covered flows include:
+
+- login redirect by role
+- public account request, verification, and approval
+- learner creation
+- lecturer dashboard access
+- student dashboard access
+- support conversation creation, admin reply, and closed-thread lock
+
+## Deployment checklist
+
+- Set a strong non-default `SECRET_KEY`
+- Confirm `DATABASE_URL` points to the production SQL Server instance
+- Install the ODBC SQL Server driver on the host
+- Set `SESSION_COOKIE_SECURE=true` behind HTTPS
+- Configure mail credentials if email delivery is required
+- Run with a production WSGI server such as `gunicorn` or your Windows hosting equivalent
+- Verify the `artifacts/` folder contains the trained model files before relying on AI predictions
+- Create the first admin account and test each role login
+
+## Notes
+
+- When the trained model artifact is missing, the app falls back to its starter rule-based prediction path.
+- `AGENTS.md` contains repository-specific guidance for future Codex sessions.
+- Database bootstrap is intended for the SQL Server environment and should stay enabled for normal local development unless you are running tests.

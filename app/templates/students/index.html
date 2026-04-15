@@ -1,18 +1,63 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block title %}Learners | EduSentinel AI{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="fw-bold mb-1">Learners</h1>
-    <p class="text-secondary mb-0">View and manage learner records across programmes.</p>
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Learner Records</div>
+    <h1 class="page-title">Learners</h1>
+    <p class="page-subtitle">View and manage learner records across programmes.</p>
   </div>
-  <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">
-    New Learner Intake
-  </a>
+  <div class="header-actions">
+    <a href="{{ url_for('students.index', search=filters.search, course_id=filters.course_id, year=filters.year, semester=filters.semester, risk_level=filters.risk_level, export='csv') }}" class="btn btn-outline-secondary rounded-pill px-4">
+      Export CSV
+    </a>
+    <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">
+      New Learner Intake
+    </a>
+  </div>
+</div>
+
+<div class="filter-shell mb-4">
+  <form method="get" class="row g-3">
+    <div class="col-lg-3">
+      <input type="text" name="search" class="form-control" placeholder="Search name or admission number" value="{{ filters.search }}">
+    </div>
+    <div class="col-md-3 col-lg-2">
+      <select name="course_id" class="form-select">
+        <option value="">All courses</option>
+        {% for course in courses %}
+        <option value="{{ course.id }}" {{ 'selected' if filters.course_id == course.id else '' }}>{{ course.code }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 col-lg-2">
+      <input type="number" name="year" class="form-control" min="1" placeholder="Year" value="{{ filters.year or '' }}">
+    </div>
+    <div class="col-md-2 col-lg-2">
+      <input type="text" name="semester" class="form-control" placeholder="Semester" value="{{ filters.semester }}">
+    </div>
+    <div class="col-md-2 col-lg-2">
+      <select name="risk_level" class="form-select">
+        <option value="">All risk</option>
+        {% for level in ['Low Risk', 'Medium Risk', 'High Risk'] %}
+        <option value="{{ level }}" {{ 'selected' if filters.risk_level == level else '' }}>{{ level }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 col-lg-1 d-grid">
+      <button type="submit" class="btn btn-outline-primary">Filter</button>
+    </div>
+  </form>
 </div>
 
 <div class="panel-card p-4">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Roster</div>
+      <h4 class="section-title">Learner Directory</h4>
+    </div>
+  </div>
   <div class="table-responsive">
     <table class="table align-middle">
       <thead>
@@ -39,16 +84,18 @@
 
           <td class="text-end">
             <div class="d-flex gap-2 justify-content-end">
-              <a href="{{ url_for('students.detail', student_id=student.id) }}"
-                 class="btn btn-sm btn-outline-primary rounded-pill">
+              <a href="{{ url_for('students.detail', student_id=student.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
                 View
               </a>
+              <a href="{{ url_for('students.add_academic_record', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                Academic
+              </a>
+              <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                Questionnaire
+              </a>
 
-              <form method="post"
-                    action="{{ url_for('students.delete', student_id=student.id) }}"
-                    onsubmit="return confirm('Delete this learner record?');">
-                <button type="submit"
-                        class="btn btn-sm btn-outline-danger rounded-pill">
+              <form method="post" action="{{ url_for('students.delete', student_id=student.id) }}" onsubmit="return confirm('Delete this learner record?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
                   Delete
                 </button>
               </form>
@@ -58,13 +105,10 @@
 
         {% else %}
         <tr>
-          <td colspan="7" class="text-secondary">
-            No learners found.
-          </td>
+          <td colspan="7"><div class="empty-state">No learners found.</div></td>
         </tr>
         {% endfor %}
       </tbody>
-
     </table>
   </div>
 </div>

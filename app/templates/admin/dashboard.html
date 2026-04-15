@@ -3,14 +3,16 @@
 
 {% block content %}
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="fw-bold mb-1">System Admin Dashboard</h1>
-    <p class="text-secondary mb-0">School-wide analytics, prediction monitoring and intervention control.</p>
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Administration Hub</div>
+    <h1 class="page-title">System Admin Dashboard</h1>
+    <p class="page-subtitle">School-wide analytics, prediction monitoring and intervention control.</p>
   </div>
-  <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">
-    New Learner Intake
-  </a>
+  <div class="header-actions">
+    <a href="{{ url_for('admin.reports') }}" class="btn btn-outline-primary rounded-pill px-4">View Reports</a>
+    <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">New Learner Intake</a>
+  </div>
 </div>
 
 <div class="row g-4 mb-4">
@@ -46,14 +48,17 @@
 <div class="row g-4 mb-4">
   <div class="col-12">
     <div class="panel-card p-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Admin Quick Actions</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Operations</div>
+          <h4 class="section-title">Admin Quick Actions</h4>
+        </div>
         <span class="badge text-bg-light">Management tools</span>
       </div>
 
       <div class="row g-3">
         <div class="col-md-6 col-xl-3">
-          <a href="{{ url_for('admin.accounts') }}" class="text-decoration-none">
+          <a href="{{ url_for('admin.accounts') }}" class="quick-card">
             <div class="stat-card h-100">
               <span>Accounts</span>
               <h2 class="fs-4 mb-2">Manage Users</h2>
@@ -63,7 +68,7 @@
         </div>
 
         <div class="col-md-6 col-xl-3">
-          <a href="{{ url_for('admin.departments') }}" class="text-decoration-none">
+          <a href="{{ url_for('admin.departments') }}" class="quick-card">
             <div class="stat-card h-100">
               <span>Departments</span>
               <h2 class="fs-4 mb-2">School Units</h2>
@@ -73,7 +78,7 @@
         </div>
 
         <div class="col-md-6 col-xl-3">
-          <a href="{{ url_for('admin.courses') }}" class="text-decoration-none">
+          <a href="{{ url_for('admin.courses') }}" class="quick-card">
             <div class="stat-card h-100">
               <span>Courses</span>
               <h2 class="fs-4 mb-2">Programme List</h2>
@@ -83,7 +88,7 @@
         </div>
 
         <div class="col-md-6 col-xl-3">
-          <a href="{{ url_for('admin.account_requests') }}" class="text-decoration-none">
+          <a href="{{ url_for('admin.account_requests') }}" class="quick-card">
             <div class="stat-card h-100">
               <span>Requests</span>
               <h2 class="fs-4 mb-2">Review Access</h2>
@@ -93,11 +98,41 @@
         </div>
 
         <div class="col-md-6 col-xl-3">
-          <a href="{{ url_for('students.create') }}" class="text-decoration-none">
+          <a href="{{ url_for('students.create') }}" class="quick-card">
             <div class="stat-card h-100">
               <span>New Intake</span>
               <h2 class="fs-4 mb-2">Add Learner</h2>
               <div class="text-secondary small">Create a new learner intake and academic record.</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+          <a href="{{ url_for('admin.feedback_messages') }}" class="quick-card">
+            <div class="stat-card h-100">
+              <span>Support</span>
+              <h2 class="fs-4 mb-2">{{ stats.support_open_count }} Open</h2>
+              <div class="text-secondary small">Review unresolved support conversations.</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+          <a href="{{ url_for('admin.reports') }}" class="quick-card">
+            <div class="stat-card h-100">
+              <span>Reports</span>
+              <h2 class="fs-4 mb-2">Analytics</h2>
+              <div class="text-secondary small">Open school-wide filtered reports and exports.</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+          <a href="{{ url_for('admin.ml_control_panel') }}" class="quick-card">
+            <div class="stat-card h-100">
+              <span>Model</span>
+              <h2 class="fs-4 mb-2">ML Control</h2>
+              <div class="text-secondary small">Check readiness, metrics, and retraining status.</div>
             </div>
           </a>
         </div>
@@ -109,8 +144,11 @@
 <div class="row g-4 mb-4 align-items-stretch">
   <div class="col-xl-7 d-flex">
     <div class="panel-card p-4 w-100 d-flex flex-column">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Risk Distribution Overview</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Analytics</div>
+          <h4 class="section-title">Risk Distribution Overview</h4>
+        </div>
         <span class="badge text-bg-light">Live analytics</span>
       </div>
 
@@ -122,7 +160,12 @@
 
   <div class="col-xl-5 d-flex">
     <div class="panel-card p-4 w-100 d-flex flex-column">
-      <h4 class="mb-3">Feature Importance</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Model Insight</div>
+          <h4 class="section-title">Feature Importance</h4>
+        </div>
+      </div>
 
       <div style="height: 320px;">
         <canvas id="importanceChart"></canvas>
@@ -135,7 +178,7 @@
           {% for feature, score in analytics.top_feature_summary %}
           <li class="mb-1">
             <strong>{{ feature.replace('_', ' ').title() }}</strong>
-            — importance score {{ '%.4f'|format(score) }}
+            - importance score {{ '%.4f'|format(score) }}
           </li>
           {% endfor %}
         </ul>
@@ -148,7 +191,12 @@
 <div class="row g-4 mb-4">
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <h4 class="mb-3">Model Status</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Readiness</div>
+          <h4 class="section-title">Model Status</h4>
+        </div>
+      </div>
 
       <div class="mb-2"><strong>Ready:</strong> {{ 'Yes' if analytics.model_meta.get('ready') else 'No' }}</div>
       <div class="mb-2"><strong>Record Count:</strong> {{ analytics.model_meta.get('record_count', 0) }}</div>
@@ -163,7 +211,12 @@
 
   <div class="col-lg-6">
     <div class="panel-card p-4 h-100">
-      <h4 class="mb-3">Administrative Focus</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Focus Areas</div>
+          <h4 class="section-title">Administrative Focus</h4>
+        </div>
+      </div>
       <ul class="mb-0 ps-3 text-secondary">
         <li class="mb-2">Monitor school-wide risk trends.</li>
         <li class="mb-2">Identify high-risk learners early.</li>
@@ -177,7 +230,12 @@
 <div class="row g-4">
   <div class="col-12">
     <div class="panel-card p-4">
-      <h4 class="mb-3">Recent Prediction Log</h4>
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Activity</div>
+          <h4 class="section-title">Recent Prediction Log</h4>
+        </div>
+      </div>
 
       <div class="table-responsive">
         <table class="table align-middle">
@@ -214,14 +272,14 @@
               </td>
 
               <td class="text-secondary small">{{ deadline }}</td>
-              <td>{{ '%.2f'|format(p.high_risk_probability) }}%</td>
+              <td>{{ '%.2f'|format(p.high_risk_probability * 100) }}%</td>
               <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
             </tr>
 
             {% else %}
             <tr>
-              <td colspan="6" class="text-center text-secondary">
-                No predictions available yet.
+              <td colspan="6">
+                <div class="empty-state text-center">No predictions available yet.</div>
               </td>
             </tr>
             {% endfor %}
@@ -243,3 +301,4 @@
 } | tojson | safe }}
 </script>
 {% endblock %}
+
