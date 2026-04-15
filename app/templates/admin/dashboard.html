@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard | EduSentinel AI{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">System Admin Dashboard</h1>
+    <p class="text-secondary mb-0">School-wide analytics, prediction monitoring and intervention control.</p>
+  </div>
+  <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">
+    New Learner Intake
+  </a>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="stat-card">
+      <span>Total Learners</span>
+      <h2>{{ stats.student_count }}</h2>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-xl-3">
+    <div class="stat-card">
+      <span>Total Predictions</span>
+      <h2>{{ stats.prediction_count }}</h2>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-xl-3">
+    <div class="stat-card">
+      <span>Lecturers</span>
+      <h2>{{ stats.lecturer_count }}</h2>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-xl-3">
+    <div class="stat-card">
+      <span>Student Accounts</span>
+      <h2>{{ stats.student_user_count }}</h2>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Admin Quick Actions</h4>
+        <span class="badge text-bg-light">Management tools</span>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6 col-xl-3">
+          <a href="{{ url_for('admin.accounts') }}" class="text-decoration-none">
+            <div class="stat-card h-100">
+              <span>Accounts</span>
+              <h2 class="fs-4 mb-2">Manage Users</h2>
+              <div class="text-secondary small">Add or remove lecturer and student accounts.</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+          <a href="{{ url_for('admin.departments') }}" class="text-decoration-none">
+            <div class="stat-card h-100">
+              <span>Departments</span>
+              <h2 class="fs-4 mb-2">School Units</h2>
+              <div class="text-secondary small">Create and review all academic departments.</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+          <a href="{{ url_for('admin.courses') }}" class="text-decoration-none">
+            <div class="stat-card h-100">
+              <span>Courses</span>
+              <h2 class="fs-4 mb-2">Programme List</h2>
+              <div class="text-secondary small">Add and maintain all courses in the system.</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+          <a href="{{ url_for('admin.account_requests') }}" class="text-decoration-none">
+            <div class="stat-card h-100">
+              <span>Requests</span>
+              <h2 class="fs-4 mb-2">Review Access</h2>
+              <div class="text-secondary small">Approve or reject account creation requests.</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+          <a href="{{ url_for('students.create') }}" class="text-decoration-none">
+            <div class="stat-card h-100">
+              <span>New Intake</span>
+              <h2 class="fs-4 mb-2">Add Learner</h2>
+              <div class="text-secondary small">Create a new learner intake and academic record.</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4 align-items-stretch">
+  <div class="col-xl-7 d-flex">
+    <div class="panel-card p-4 w-100 d-flex flex-column">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Risk Distribution Overview</h4>
+        <span class="badge text-bg-light">Live analytics</span>
+      </div>
+
+      <div style="height: 320px;">
+        <canvas id="riskChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-5 d-flex">
+    <div class="panel-card p-4 w-100 d-flex flex-column">
+      <h4 class="mb-3">Feature Importance</h4>
+
+      <div style="height: 320px;">
+        <canvas id="importanceChart"></canvas>
+      </div>
+
+      {% if analytics.top_feature_summary %}
+      <div class="mt-3">
+        <h6 class="fw-semibold mb-2">Top School-Wide Risk Drivers</h6>
+        <ul class="small text-secondary mb-0 ps-3">
+          {% for feature, score in analytics.top_feature_summary %}
+          <li class="mb-1">
+            <strong>{{ feature.replace('_', ' ').title() }}</strong>
+            — importance score {{ '%.4f'|format(score) }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Model Status</h4>
+
+      <div class="mb-2"><strong>Ready:</strong> {{ 'Yes' if analytics.model_meta.get('ready') else 'No' }}</div>
+      <div class="mb-2"><strong>Record Count:</strong> {{ analytics.model_meta.get('record_count', 0) }}</div>
+      <div class="mb-2"><strong>Weighted F1:</strong> {{ '%.2f'|format(analytics.model_meta.get('test_f1_weighted', 0)) }}</div>
+      <div class="mb-2"><strong>Balanced Accuracy:</strong> {{ '%.2f'|format(analytics.model_meta.get('test_balanced_accuracy', 0)) }}</div>
+
+      <div class="alert alert-warning mt-3">
+        {{ analytics.model_meta.get('message', 'Model status unavailable.') }}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Administrative Focus</h4>
+      <ul class="mb-0 ps-3 text-secondary">
+        <li class="mb-2">Monitor school-wide risk trends.</li>
+        <li class="mb-2">Identify high-risk learners early.</li>
+        <li class="mb-2">Ensure lecturer accountability in interventions.</li>
+        <li class="mb-0">Track system prediction performance.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <h4 class="mb-3">Recent Prediction Log</h4>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Learner</th>
+              <th>Risk</th>
+              <th>Priority</th>
+              <th>Action Deadline</th>
+              <th>High Risk %</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for p in recent_predictions %}
+            {% set priority = 'Immediate' if p.predicted_risk == 'High Risk' else 'Moderate' if p.predicted_risk == 'Medium Risk' else 'Routine' %}
+            {% set badge = 'text-bg-danger' if p.predicted_risk == 'High Risk' else 'text-bg-warning' if p.predicted_risk == 'Medium Risk' else 'text-bg-success' %}
+            {% set deadline = 'Within 24 hours' if p.predicted_risk == 'High Risk' else 'Within 7 days' if p.predicted_risk == 'Medium Risk' else 'Routine monitoring' %}
+
+            <tr>
+              <td>{{ p.student.full_name }}</td>
+
+              <td>
+                <span class="badge rounded-pill {{ badge }}">
+                  {{ p.predicted_risk }}
+                </span>
+              </td>
+
+              <td>
+                <span class="badge rounded-pill {{ badge }}">
+                  {{ priority }}
+                </span>
+              </td>
+
+              <td class="text-secondary small">{{ deadline }}</td>
+              <td>{{ '%.2f'|format(p.high_risk_probability) }}%</td>
+              <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+            </tr>
+
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-secondary">
+                No predictions available yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script id="dashboard-data" type="application/json">
+{{ {
+  "riskCounts": analytics.risk_counts,
+  "featureImportance": analytics.feature_importance
+} | tojson | safe }}
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Learners | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">Learners</h1>
+    <p class="text-secondary mb-0">View and manage learner records across programmes.</p>
+  </div>
+  <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">
+    New Learner Intake
+  </a>
+</div>
+
+<div class="panel-card p-4">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Admission No</th>
+          <th>Name</th>
+          <th>Programme</th>
+          <th>Department</th>
+          <th>Year</th>
+          <th>Semester</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>{{ student.admission_no }}</td>
+          <td>{{ student.full_name }}</td>
+          <td>{{ student.course.program_level }} in {{ student.course.name }}</td>
+          <td>{{ student.department.name }}</td>
+          <td>{{ student.year_of_study }}</td>
+          <td>{{ student.semester }}</td>
+
+          <td class="text-end">
+            <div class="d-flex gap-2 justify-content-end">
+              <a href="{{ url_for('students.detail', student_id=student.id) }}"
+                 class="btn btn-sm btn-outline-primary rounded-pill">
+                View
+              </a>
+
+              <form method="post"
+                    action="{{ url_for('students.delete', student_id=student.id) }}"
+                    onsubmit="return confirm('Delete this learner record?');">
+                <button type="submit"
+                        class="btn btn-sm btn-outline-danger rounded-pill">
+                  Delete
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-secondary">
+            No learners found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+
+    </table>
+  </div>
+</div>
+{% endblock %}

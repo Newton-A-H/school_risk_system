@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Add Academic Record | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-9">
+    <div class="panel-card p-4 p-lg-5">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="fw-bold mb-1">Add Academic Record</h1>
+          <p class="text-secondary mb-0">
+            {{ student.full_name }} • {{ student.admission_no }} • {{ student.course.program_level }} in {{ student.course.name }}
+          </p>
+        </div>
+        <a href="{{ url_for('students.detail', student_id=student.id) }}" class="btn btn-outline-secondary rounded-pill px-4">
+          Back
+        </a>
+      </div>
+
+      <form method="post">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label">Term / Academic Period</label>
+            <input type="text" name="term_name" class="form-control" placeholder="e.g. Term 1 2026" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Attendance Percentage</label>
+            <input type="number" step="0.01" min="0" max="100" name="attendance_percent" class="form-control" placeholder="e.g. 85" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Assignment Mark</label>
+            <input type="number" step="0.01" min="0" max="30" name="assignment_mark" class="form-control" placeholder="Optional">
+            <div class="form-text">Optional component.</div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">CAT Mark</label>
+            <input type="number" step="0.01" min="0" max="30" name="cat_mark" class="form-control" placeholder="Out of 30" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Main Exam Mark</label>
+            <input type="number" step="0.01" min="0" max="70" name="exam_mark" class="form-control" placeholder="Out of 70" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Teacher Comment</label>
+            <textarea name="teacher_comment" class="form-control" rows="4" placeholder="Optional teacher remarks"></textarea>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-brand rounded-pill px-4">Save Academic Record</button>
+          <a href="{{ url_for('students.detail', student_id=student.id) }}" class="btn btn-outline-secondary rounded-pill px-4">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

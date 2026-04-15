@@ -1,0 +1,235 @@
+/* ============================= */
+/* GLOBAL SETTINGS */
+/* ============================= */
+
+:root {
+  --primary: #0f172a;
+  --accent: #22c55e;
+  --accent-dark: #16a34a;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f8fafc;
+  --text: #1e293b;
+  --muted: #64748b;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* ============================= */
+/* NAVBAR */
+/* ============================= */
+
+.app-nav {
+  background: linear-gradient(135deg, #445479, #1e293b);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* Logo layout */
+.brand-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.logo-crop {
+  width: 84px;
+  height: 72px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-logo {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brand-text {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #ffffff;
+}
+
+.brand-ai {
+  color: var(--accent);
+}
+
+/* Navbar links */
+.navbar-nav .nav-link {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #ffffff;
+}
+
+/* ============================= */
+/* BUTTONS */
+/* ============================= */
+
+.btn-brand {
+  background-color: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.btn-brand:hover {
+  background-color: var(--accent-dark);
+  color: #fff;
+}
+
+/* ============================= */
+/* CARDS */
+/* ============================= */
+
+.panel-card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+}
+
+.stat-card span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stat-card h2 {
+  font-weight: 700;
+  margin-top: 6px;
+  font-size: 1.6rem;
+}
+
+/* ============================= */
+/* TABLES */
+/* ============================= */
+
+.table {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.table thead th {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* ============================= */
+/* BADGES */
+/* ============================= */
+
+.badge {
+  font-size: 0.75rem;
+  padding: 6px 10px;
+  font-weight: 600;
+}
+
+/* ============================= */
+/* ALERTS */
+/* ============================= */
+
+.alert {
+  border-radius: 12px;
+}
+
+/* ============================= */
+/* FORMS */
+/* ============================= */
+
+.form-control,
+.form-select {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem rgba(34,197,94,0.15);
+}
+
+/* ============================= */
+/* DASHBOARD LAYOUT */
+/* ============================= */
+
+.app-shell {
+  min-height: 100vh;
+}
+
+/* ============================= */
+/* CHARTS */
+/* ============================= */
+
+canvas {
+  max-width: 100%;
+}
+
+/* ============================= */
+/* DROPDOWN */
+/* ============================= */
+
+.dropdown-menu {
+  border-radius: 12px;
+  border: none;
+}
+
+/* ============================= */
+/* SCROLL */
+/* ============================= */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5f5;
+  border-radius: 10px;
+}
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 768px) {
+  .brand-text {
+    font-size: 1rem;
+  }
+
+  .logo-crop {
+    width: 52px;
+    height: 44px;
+  }
+
+  .app-logo {
+    height: 70px;
+  }
+}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Account Requests | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">Account Requests</h1>
+    <p class="text-secondary mb-0">Review, approve, reject, resend verification, or delete requests.</p>
+  </div>
+  <a href="{{ url_for('admin.accounts') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Accounts</a>
+</div>
+
+<div class="panel-card p-4">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Applicant</th>
+          <th>Email</th>
+          <th>Requested Role</th>
+          <th>Department</th>
+          <th>Course</th>
+          <th>Email Verified</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests %}
+        <tr>
+          <td>{{ req.full_name }}</td>
+          <td>{{ req.email }}</td>
+          <td class="text-capitalize">{{ req.requested_role }}</td>
+          <td>{{ req.department.name if req.department else '-' }}</td>
+          <td>{{ req.course.name if req.course else '-' }}</td>
+          <td>
+            <span class="badge rounded-pill {{ 'text-bg-success' if req.is_email_verified else 'text-bg-secondary' }}">
+              {{ 'Verified' if req.is_email_verified else 'Pending' }}
+            </span>
+          </td>
+          <td>
+            <span class="badge rounded-pill {{ 'text-bg-warning' if req.status == 'pending' else 'text-bg-success' if req.status == 'approved' else 'text-bg-danger' }}">
+              {{ req.status }}
+            </span>
+          </td>
+          <td class="text-end">
+            <div class="d-flex gap-2 justify-content-end flex-wrap">
+              {% if not req.is_email_verified %}
+              <form method="post" action="{{ url_for('admin.resend_verification', request_id=req.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill">Resend Verification</button>
+              </form>
+              {% endif %}
+
+              {% if req.status == 'pending' %}
+              <form method="post" action="{{ url_for('admin.approve_account_request', request_id=req.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill">Approve</button>
+              </form>
+              <form method="post" action="{{ url_for('admin.reject_account_request', request_id=req.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill">Reject</button>
+              </form>
+              {% endif %}
+
+              <form method="post" action="{{ url_for('admin.delete_account_request', request_id=req.id) }}" onsubmit="return confirm('Delete this account request?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-secondary">No account requests found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

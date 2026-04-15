@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}New Course | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-6 col-lg-7">
+    <div class="panel-card p-4 p-lg-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="fw-bold mb-1">Create Course</h1>
+          <p class="text-secondary mb-0">Add a new course under a department.</p>
+        </div>
+        <a href="{{ url_for('admin.courses') }}" class="btn btn-outline-secondary rounded-pill px-4">Back</a>
+      </div>
+
+      <form method="post">
+        <div class="row g-4">
+          <div class="col-12">
+            <label class="form-label">Department</label>
+            <select name="department_id" class="form-select" required>
+              <option value="">Choose department</option>
+              {% for department in departments %}
+              <option value="{{ department.id }}">{{ department.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Course Name</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Course Code</label>
+            <input type="text" name="code" class="form-control" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Program Level</label>
+            <select name="program_level" class="form-select" required>
+              <option value="">Choose program level</option>
+              <option value="Certificate">Certificate</option>
+              <option value="Diploma">Diploma</option>
+              <option value="Degree">Degree</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-brand rounded-pill px-4">Save Course</button>
+          <a href="{{ url_for('admin.courses') }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

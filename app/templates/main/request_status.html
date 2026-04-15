@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Request Status | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-9">
+    <div class="panel-card p-4 p-lg-5">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="fw-bold mb-1">Account Request Status</h1>
+          <p class="text-secondary mb-0">Track verification and approval progress using your email address.</p>
+        </div>
+        <a href="{{ url_for('main.home') }}" class="btn btn-outline-secondary rounded-pill px-4">Back Home</a>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="stat-card">
+            <span>Applicant</span>
+            <h2 class="fs-4">{{ account_request.full_name }}</h2>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="stat-card">
+            <span>Requested Role</span>
+            <h2 class="fs-4 text-capitalize">{{ account_request.requested_role }}</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card p-4 mb-4">
+        <div class="mb-2"><strong>Email:</strong> {{ account_request.email }}</div>
+        <div class="mb-2"><strong>Department:</strong> {{ account_request.department.name if account_request.department else '-' }}</div>
+        <div class="mb-2"><strong>Course:</strong> {{ account_request.course.name if account_request.course else '-' }}</div>
+        {% if account_request.admission_no %}
+        <div class="mb-2"><strong>Admission Number:</strong> {{ account_request.admission_no }}</div>
+        {% endif %}
+        <div class="mb-2">
+          <strong>Email Verification:</strong>
+          <span class="badge rounded-pill {{ 'text-bg-success' if account_request.is_email_verified else 'text-bg-warning' }}">
+            {{ 'Verified' if account_request.is_email_verified else 'Pending' }}
+          </span>
+        </div>
+        <div class="mb-0">
+          <strong>Approval Status:</strong>
+          <span class="badge rounded-pill {{ 'text-bg-warning' if account_request.status == 'pending' else 'text-bg-success' if account_request.status == 'approved' else 'text-bg-danger' }}">
+            {{ account_request.status }}
+          </span>
+        </div>
+      </div>
+
+      <div class="alert alert-light border mb-4">
+        {% if not account_request.is_email_verified %}
+          Please verify your email first. Once verified, the administrator can review your request.
+        {% elif account_request.status == 'pending' %}
+          Your email is verified. Your request is now awaiting administrator approval.
+        {% elif account_request.status == 'approved' %}
+          Your request has been approved. If email delivery is enabled, your credentials were sent to your email.
+        {% else %}
+          Your request was reviewed and not approved.
+        {% endif %}
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('main.resend_verification_public') }}" class="btn btn-outline-primary rounded-pill px-4">
+          Resend Verification
+        </a>
+        <a href="{{ url_for('main.request_status_lookup') }}" class="btn btn-outline-secondary rounded-pill px-4">
+          Check Another Request
+        </a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4">
+          Go to Login
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

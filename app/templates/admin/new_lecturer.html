@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Add Lecturer | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-7 col-lg-8">
+    <div class="panel-card p-4 p-lg-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="fw-bold mb-1">Create Lecturer Account</h1>
+          <p class="text-secondary mb-0">Create the lecturer account and assign the department immediately.</p>
+        </div>
+        <a href="{{ url_for('admin.accounts') }}" class="btn btn-outline-secondary rounded-pill px-4">Back</a>
+      </div>
+
+      <form method="post">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Department</label>
+            <select name="department_id" class="form-select" required>
+              <option value="">Select department</option>
+              {% for dept in departments %}
+              <option value="{{ dept.id }}">{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Temporary Password</label>
+            <input type="text" name="password" class="form-control" required>
+            <div class="form-text">The lecturer will be required to change this after first login.</div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-brand rounded-pill px-4">Create Lecturer Account</button>
+          <a href="{{ url_for('admin.accounts') }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

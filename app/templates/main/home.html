@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}EduSentinel AI | Home{% endblock %}
+
+{% block content %}
+<section class="py-5 py-lg-6">
+  <div class="row align-items-center g-5">
+    <div class="col-lg-6">
+      <span class="badge rounded-pill text-bg-light border px-3 py-2 mb-3">
+        Smart Academic Risk Monitoring
+      </span>
+
+      <h1 class="display-5 fw-bold mb-4" style="line-height: 1.15;">
+        A calmer, smarter way to identify academic risk early and support learners before they fall behind.
+      </h1>
+
+      <p class="lead text-secondary mb-4" style="max-width: 680px;">
+        EduSentinel AI helps schools bring together learner records, academic progress, questionnaire feedback,
+        and intervention guidance in one practical system designed for administrators, lecturers, and students.
+      </p>
+
+      <div class="d-flex flex-wrap gap-3 mb-4">
+        {% if current_user.is_authenticated %}
+          {% if current_user.role == 'admin' %}
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn-brand rounded-pill px-4 py-2">Open Admin Dashboard</a>
+          {% elif current_user.role == 'lecturer' %}
+          <a href="{{ url_for('lecturer.dashboard') }}" class="btn btn-brand rounded-pill px-4 py-2">Open Lecturer Dashboard</a>
+          {% elif current_user.role == 'student' %}
+          <a href="{{ url_for('student_portal.dashboard') }}" class="btn btn-brand rounded-pill px-4 py-2">Open Student Dashboard</a>
+          {% endif %}
+        {% else %}
+          <a href="{{ url_for('main.request_account') }}" class="btn btn-brand rounded-pill px-4 py-2">Request Account</a>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2">Login</a>
+        {% endif %}
+      </div>
+
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <div class="panel-card p-3 h-100">
+            <div class="fw-semibold mb-1">Early Support</div>
+            <div class="text-secondary small">Detect warning signs before performance drops too far.</div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="panel-card p-3 h-100">
+            <div class="fw-semibold mb-1">Clear Intervention</div>
+            <div class="text-secondary small">Turn risk signals into simple, practical action plans.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="panel-card p-4 p-lg-5">
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="stat-card">
+              <span>For Administrators</span>
+              <h2 class="fs-4">Monitor school-wide trends</h2>
+              <p class="text-secondary mb-0 small">
+                Track learner records, account requests, department activity, and risk distribution from one central dashboard.
+              </p>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="stat-card">
+              <span>For Lecturers</span>
+              <h2 class="fs-4">Follow learners in your department</h2>
+              <p class="text-secondary mb-0 small">
+                Add academic records, verify submitted data, review questionnaire responses, and run predictions where support is needed.
+              </p>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="stat-card">
+              <span>For Students</span>
+              <h2 class="fs-4">Understand your academic standing</h2>
+              <p class="text-secondary mb-0 small">
+                See your current risk status, recent predictions, key learning concerns, and suggested next steps.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-4 py-lg-5">
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="panel-card p-4 h-100">
+        <h3 class="h5 fw-bold mb-3">How it works</h3>
+        <p class="text-secondary mb-3">
+          The system supports a more natural school workflow instead of forcing everything into one page.
+        </p>
+        <div class="text-secondary small">
+          Learner intake comes first, then academic records, then questionnaire input, and finally prediction and intervention support.
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="panel-card p-4 h-100">
+        <h3 class="h5 fw-bold mb-3">Built for real school use</h3>
+        <p class="text-secondary mb-3">
+          EduSentinel AI is structured for practical use across departments, not just as a one-off academic demo.
+        </p>
+        <div class="text-secondary small">
+          It separates users by role, keeps records organised, and helps reduce manual follow-up work.
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="panel-card p-4 h-100">
+        <h3 class="h5 fw-bold mb-3">Support when it matters</h3>
+        <p class="text-secondary mb-3">
+          A risk alert alone is not enough. The system is designed to pair prediction with meaningful action.
+        </p>
+        <div class="text-secondary small">
+          That includes recommendation summaries, urgency levels, and space for lecturer verification and school follow-up.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-4 py-lg-5">
+  <div class="panel-card p-4 p-lg-5">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <h2 class="fw-bold mb-2">Need access to the platform?</h2>
+        <p class="text-secondary mb-0">
+          New students and lecturers can request an account, verify their email, and wait for administrator approval.
+          The system is designed to create and link the right records automatically after approval.
+        </p>
+      </div>
+      <div class="col-lg-4 text-lg-end">
+        <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+          <a href="{{ url_for('main.request_account') }}" class="btn btn-brand rounded-pill px-4">Request Account</a>
+          <a href="{{ url_for('main.resend_verification_public') }}" class="btn btn-outline-secondary rounded-pill px-4">Resend Verification</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

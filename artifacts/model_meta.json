@@ -1,0 +1,29 @@
+{
+  "classes": [
+    "Low Risk",
+    "Medium Risk",
+    "High Risk"
+  ],
+  "train_size": 0,
+  "test_size": 0,
+  "cv_f1_weighted_mean": 0.0,
+  "cv_f1_weighted_std": 0.0,
+  "test_f1_weighted": 0.0,
+  "test_balanced_accuracy": 0.0,
+  "threshold": 0.55,
+  "features": [
+    "marks",
+    "attendance_percent",
+    "coursework_mark",
+    "exam_mark",
+    "year_of_study",
+    "attendance_frequency",
+    "coursework_on_time",
+    "main_challenge",
+    "early_warning_helpful",
+    "study_hours_per_week"
+  ],
+  "record_count": 4,
+  "ready": false,
+  "message": "Model not trained yet. At least 20 student records are required."
+}

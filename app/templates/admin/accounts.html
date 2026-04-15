@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Manage Accounts | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">Manage Accounts</h1>
+    <p class="text-secondary mb-0">Create lecturer accounts, manage users, and review account requests.</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('admin.create_lecturer') }}" class="btn btn-brand rounded-pill px-4">Add Lecturer</a>
+    <a href="{{ url_for('students.create') }}" class="btn btn-outline-primary rounded-pill px-4">Add Learner + Student Account</a>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Lecturer Accounts</h4>
+        <span class="badge text-bg-light">{{ lecturers|length }}</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lecturer in lecturers %}
+            <tr>
+              <td>{{ lecturer.full_name }}</td>
+              <td>{{ lecturer.email }}</td>
+              <td>{{ lecturer.department.name if lecturer.department else 'Not assigned' }}</td>
+              <td>
+                <span class="badge rounded-pill {{ 'text-bg-success' if lecturer.is_active_account else 'text-bg-secondary' }}">
+                  {{ 'Active' if lecturer.is_active_account else 'Inactive' }}
+                </span>
+              </td>
+              <td class="text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                  <form method="post" action="{{ url_for('admin.reset_password', user_id=lecturer.id) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill">Reset Password</button>
+                  </form>
+                  <form method="post" action="{{ url_for('admin.delete_user', user_id=lecturer.id) }}" onsubmit="return confirm('Remove this lecturer account?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-secondary">No lecturer accounts available.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Student User Accounts</h4>
+        <span class="badge text-bg-light">{{ student_users|length }}</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student_user in student_users %}
+            <tr>
+              <td>{{ student_user.full_name }}</td>
+              <td>{{ student_user.email }}</td>
+              <td>
+                <span class="badge rounded-pill {{ 'text-bg-success' if student_user.is_active_account else 'text-bg-secondary' }}">
+                  {{ 'Active' if student_user.is_active_account else 'Inactive' }}
+                </span>
+              </td>
+              <td class="text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                  <form method="post" action="{{ url_for('admin.reset_password', user_id=student_user.id) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill">Reset Password</button>
+                  </form>
+                  <form method="post" action="{{ url_for('admin.delete_user', user_id=student_user.id) }}" onsubmit="return confirm('Remove this student account?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-secondary">No student user accounts available.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Account Requests</h4>
+        <a href="{{ url_for('admin.account_requests') }}" class="btn btn-sm btn-outline-primary rounded-pill">Open Requests</a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Applicant</th>
+              <th>Email</th>
+              <th>Requested Role</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requests %}
+            <tr>
+              <td>{{ req.full_name }}</td>
+              <td>{{ req.email }}</td>
+              <td class="text-capitalize">{{ req.requested_role }}</td>
+              <td>
+                <span class="badge rounded-pill {{ 'text-bg-warning' if req.status == 'pending' else 'text-bg-success' if req.status == 'approved' else 'text-bg-danger' }}">
+                  {{ req.status }}
+                </span>
+              </td>
+              <td>{{ req.created_at.strftime('%d %b %Y') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-secondary">No account requests available.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

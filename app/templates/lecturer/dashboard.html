@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Lecturer Dashboard | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">Lecturer Dashboard</h1>
+    <p class="text-secondary mb-0">
+      {% if department %}
+      Department: {{ department.name }}
+      {% else %}
+      Department not assigned
+      {% endif %}
+    </p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">New Learner Intake</a>
+    <a href="{{ url_for('lecturer.academic_records') }}" class="btn btn-outline-primary rounded-pill px-4">Verify Academic Records</a>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <span>Department Learners</span>
+      <h2>{{ learner_count }}</h2>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <span>High Risk</span>
+      <h2>{{ high_risk_count }}</h2>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <span>Medium Risk</span>
+      <h2>{{ medium_risk_count }}</h2>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <span>Pending Verification</span>
+      <h2>{{ pending_verifications }}</h2>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Lecturer Privileges</h4>
+      <ul class="mb-0 ps-3 text-secondary">
+        <li class="mb-2">View all learners in your department.</li>
+        <li class="mb-2">Create learner intake records.</li>
+        <li class="mb-2">Add academic records.</li>
+        <li class="mb-2">Add questionnaire responses.</li>
+        <li class="mb-2">Run risk predictions.</li>
+        <li class="mb-0">Verify academic records submitted for your department.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Model Status</h4>
+      <div class="mb-2"><strong>Ready:</strong> {{ 'Yes' if model_meta and model_meta.get('ready') else 'No' }}</div>
+      <div class="mb-2"><strong>Record Count:</strong> {{ model_meta.get('record_count', 0) if model_meta else 0 }}</div>
+      <div class="mb-2"><strong>Weighted F1:</strong> {{ '%.2f'|format(model_meta.get('test_f1_weighted', 0)) if model_meta else '0.00' }}</div>
+      <div class="mb-2"><strong>Balanced Accuracy:</strong> {{ '%.2f'|format(model_meta.get('test_balanced_accuracy', 0)) if model_meta else '0.00' }}</div>
+      <div class="mb-0"><strong>Message:</strong> {{ model_meta.get('message', 'No status available.') if model_meta else 'No status available.' }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <h4 class="mb-3">Department Learners</h4>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Admission No</th>
+              <th>Name</th>
+              <th>Programme</th>
+              <th>Year</th>
+              <th>Semester</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <td>{{ student.admission_no }}</td>
+              <td>{{ student.full_name }}</td>
+              <td>{{ student.course.program_level }} in {{ student.course.name }}</td>
+              <td>{{ student.year_of_study }}</td>
+              <td>{{ student.semester }}</td>
+              <td class="text-end">
+                <a href="{{ url_for('students.detail', student_id=student.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                  Open
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-secondary">No learners found for this department.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <h4 class="mb-3">Recent Department Predictions</h4>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Learner</th>
+              <th>Programme</th>
+              <th>Risk</th>
+              <th>High Risk %</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prediction in predictions %}
+            <tr>
+              <td>{{ prediction.student.full_name }}</td>
+              <td>{{ prediction.student.course.program_level }} in {{ prediction.student.course.name }}</td>
+              <td>
+                <span class="badge rounded-pill {{ 'text-bg-danger' if prediction.predicted_risk == 'High Risk' else 'text-bg-warning' if prediction.predicted_risk == 'Medium Risk' else 'text-bg-success' }}">
+                  {{ prediction.predicted_risk }}
+                </span>
+              </td>
+              <td>{{ '%.2f'|format(prediction.high_risk_probability) }}%</td>
+              <td>{{ prediction.created_at.strftime('%d %b %Y') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-secondary">No predictions available yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

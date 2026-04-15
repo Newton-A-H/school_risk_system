@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Support Conversation | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">{{ conversation.subject }}</h1>
+    <p class="text-secondary mb-0">Support Type: {{ conversation.support_type }}</p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <span class="badge rounded-pill {{ 'text-bg-warning' if conversation.status == 'open' else 'text-bg-secondary' }}">
+      {{ conversation.status }}
+    </span>
+    <a href="{{ url_for('main.my_support') }}" class="btn btn-outline-secondary rounded-pill px-4">Back</a>
+  </div>
+</div>
+
+<div class="panel-card p-4 mb-4">
+  <div class="border rounded-4 p-3 bg-light-subtle" style="max-height: 540px; overflow-y: auto;">
+    {% for message in conversation.messages %}
+    <div class="mb-3">
+      <div class="fw-semibold mb-1">
+        {{ message.sender_name }}
+        <span class="badge rounded-pill {{ 'text-bg-primary' if message.is_admin_reply else 'text-bg-light border text-dark' }}">
+          {{ 'Admin' if message.is_admin_reply else 'You' }}
+        </span>
+      </div>
+      <div class="text-secondary small mb-2">{{ message.created_at.strftime('%d %b %Y %H:%M') }}</div>
+      <div class="border rounded-4 p-3 {{ 'bg-primary-subtle' if message.is_admin_reply else 'bg-white' }}" style="white-space: pre-wrap;">
+        {{ message.body }}
+      </div>
+    </div>
+    {% if not loop.last %}<hr>{% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="panel-card p-4">
+  <h4 class="mb-3">Reply</h4>
+
+  {% if conversation.status == 'open' %}
+  <form method="post" action="{{ url_for('main.reply_support_conversation', conversation_id=conversation.id) }}">
+    <div class="mb-3">
+      <textarea name="body" class="form-control" rows="5" placeholder="Type your reply here..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-brand rounded-pill px-4">Send Reply</button>
+  </form>
+  {% else %}
+  <div class="alert alert-light border mb-0">
+    This conversation has been closed by the admin. You cannot send new messages in this conversation.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

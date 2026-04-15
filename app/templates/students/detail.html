@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block title %}Learner Detail | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">{{ student.full_name }}</h1>
+    <p class="text-secondary mb-0">
+      Admission No: {{ student.admission_no }} • {{ student.course.program_level }} in {{ student.course.name }}
+    </p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('students.add_academic_record', student_id=student.id) }}" class="btn btn-brand rounded-pill px-4">
+      Add Academic Record
+    </a>
+    <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-outline-primary rounded-pill px-4">
+      Add Questionnaire
+    </a>
+    <a href="{{ url_for('students.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+      Back to Learners
+    </a>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-4">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Learner Profile</h4>
+      <div class="mb-2"><strong>Full Name:</strong> {{ student.full_name }}</div>
+      <div class="mb-2"><strong>Admission No:</strong> {{ student.admission_no }}</div>
+      <div class="mb-2"><strong>Email:</strong> {{ student.email or 'Not provided' }}</div>
+      <div class="mb-2"><strong>Phone:</strong> {{ student.phone or 'Not provided' }}</div>
+      <div class="mb-2"><strong>Department:</strong> {{ student.department.name }}</div>
+      <div class="mb-2"><strong>Programme:</strong> {{ student.course.program_level }}</div>
+      <div class="mb-2"><strong>Course:</strong> {{ student.course.name }}</div>
+      <div class="mb-2"><strong>Course Code:</strong> {{ student.course.code }}</div>
+      <div class="mb-2"><strong>Year:</strong> {{ student.year_of_study }}</div>
+      <div class="mb-0"><strong>Semester:</strong> {{ student.semester }}</div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="panel-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Prediction Result</h4>
+        {% if prediction %}
+        <span class="badge rounded-pill {{ 'text-bg-danger' if prediction.predicted_risk == 'High Risk' else 'text-bg-warning' if prediction.predicted_risk == 'Medium Risk' else 'text-bg-success' }}">
+          {{ prediction.predicted_risk }}
+        </span>
+        {% endif %}
+      </div>
+
+      {% if prediction %}
+      <div class="row g-4 mb-3">
+        <div class="col-md-4">
+          <div class="stat-card">
+            <span>High Risk Probability</span>
+            <h2>{{ '%.2f'|format(prediction.high_risk_probability) }}%</h2>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-card">
+            <span>Threshold Used</span>
+            <h2>{{ '%.2f'|format(prediction.threshold_used) }}</h2>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-card">
+            <span>Prediction Date</span>
+            <h2 class="fs-5">{{ prediction.created_at.strftime('%d %b %Y') }}</h2>
+          </div>
+        </div>
+      </div>
+
+      {% if advisory %}
+      <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <div class="fw-semibold mb-1">{{ advisory.alert_message }}</div>
+          <div class="text-secondary small">Recommended intervention timeline: {{ advisory.deadline_label }} (by {{ advisory.deadline_date }})</div>
+        </div>
+        <span class="badge rounded-pill {{ advisory.badge_class }}">{{ advisory.priority }}</span>
+      </div>
+      {% endif %}
+
+      <h5 class="mb-2">Recommendation</h5>
+      <p class="text-secondary mb-0">{{ prediction.recommendation }}</p>
+      {% else %}
+      <div class="alert alert-light border mb-3">
+        No prediction record is available yet.
+      </div>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('students.run_prediction', student_id=student.id) }}">
+        <button type="submit" class="btn btn-success rounded-pill px-4">Run Prediction</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Academic Record</h4>
+        <a href="{{ url_for('students.add_academic_record', student_id=student.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+          Add / Update
+        </a>
+      </div>
+
+      {% if record %}
+      <div class="mb-2"><strong>Term:</strong> {{ record.term_name }}</div>
+      <div class="mb-2"><strong>Assignment Mark:</strong> {{ record.assignment_mark or 0 }}</div>
+      <div class="mb-2"><strong>CAT Mark:</strong> {{ record.cat_mark }}</div>
+      <div class="mb-2"><strong>Coursework Total:</strong> {{ record.coursework_total }}</div>
+      <div class="mb-2"><strong>Exam Mark:</strong> {{ record.exam_mark }}</div>
+      <div class="mb-2"><strong>Final Mark:</strong> {{ record.final_mark }}</div>
+      <div class="mb-2"><strong>Attendance:</strong> {{ record.attendance_percent }}%</div>
+      <div class="mb-0"><strong>Teacher Comment:</strong> {{ record.teacher_comment or 'No comment provided' }}</div>
+      {% else %}
+      <div class="alert alert-light border mb-0">
+        No academic record is available yet.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Questionnaire Response</h4>
+        <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+          Add / Update
+        </a>
+      </div>
+
+      {% if response %}
+      <div class="mb-2"><strong>Attendance Frequency:</strong> {{ response.attendance_frequency }}</div>
+      <div class="mb-2"><strong>Coursework on Time:</strong> {{ response.coursework_on_time }}</div>
+      <div class="mb-2"><strong>Main Challenge:</strong> {{ response.main_challenge }}</div>
+      <div class="mb-2"><strong>Early Warning Helpful:</strong> {{ response.early_warning_helpful }}</div>
+      <div class="mb-0"><strong>Study Hours per Week:</strong> {{ response.study_hours_per_week }}</div>
+      {% else %}
+      <div class="alert alert-light border mb-0">
+        No questionnaire response is available yet.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if advisory %}
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Top Risk Drivers</h4>
+      <ul class="mb-0 ps-3">
+        {% for driver in advisory.drivers %}
+        <li class="mb-2">{{ driver }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">Recommended Action Plan</h4>
+      <ol class="mb-0 ps-3">
+        {% for step in advisory.action_plan %}
+        <li class="mb-2">{{ step }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

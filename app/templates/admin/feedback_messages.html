@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Support Conversations | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">Support Conversations</h1>
+    <p class="text-secondary mb-0">Review support history and respond to user issues.</p>
+  </div>
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Dashboard</a>
+</div>
+
+<div class="row g-4">
+  {% for conversation in conversations %}
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <div>
+          <h4 class="mb-1">{{ conversation.subject }}</h4>
+          <div class="text-secondary small">
+            {{ conversation.sender_name }}
+            {% if conversation.sender_email %} • {{ conversation.sender_email }}{% endif %}
+            • {{ conversation.support_type }}
+            • {{ conversation.last_message_at.strftime('%d %b %Y %H:%M') }}
+          </div>
+        </div>
+        <span class="badge rounded-pill {{ 'text-bg-warning' if conversation.status == 'open' else 'text-bg-secondary' }}">
+          {{ conversation.status }}
+        </span>
+      </div>
+
+      <div class="text-secondary small mb-3">
+        {{ conversation.messages|length }} message{{ '' if conversation.messages|length == 1 else 's' }}
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin.feedback_conversation_detail', conversation_id=conversation.id) }}" class="btn btn-outline-primary rounded-pill px-4">
+          Open Conversation
+        </a>
+        <form method="post" action="{{ url_for('admin.delete_feedback_conversation', conversation_id=conversation.id) }}" onsubmit="return confirm('Delete this conversation?');">
+          <button type="submit" class="btn btn-outline-danger rounded-pill px-4">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="text-secondary">No support conversations yet.</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

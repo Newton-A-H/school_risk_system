@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">Welcome, {{ student.full_name }}</h1>
+    <p class="text-secondary mb-0">Monitor your academic standing and improvement guidance.</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span>Current Risk Status</span>
+      <h2 class="fs-3">{% if prediction %}{{ prediction.predicted_risk }}{% else %}No Data{% endif %}</h2>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span>Programme</span>
+      <h2 class="fs-5">{{ student.course.program_level }}</h2>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span>Course</span>
+      <h2 class="fs-5">{{ student.course.name }}</h2>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="panel-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">My Latest Prediction</h4>
+        {% if prediction %}
+        <span class="badge rounded-pill {{ 'text-bg-danger' if prediction.predicted_risk == 'High Risk' else 'text-bg-warning' if prediction.predicted_risk == 'Medium Risk' else 'text-bg-success' }}">
+          {{ prediction.predicted_risk }}
+        </span>
+        {% endif %}
+      </div>
+
+      {% if prediction %}
+      <div class="row g-4 mb-3">
+        <div class="col-md-6">
+          <div class="stat-card">
+            <span>High Risk Probability</span>
+            <h2>{{ '%.2f'|format(prediction.high_risk_probability) }}%</h2>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="stat-card">
+            <span>Prediction Date</span>
+            <h2 class="fs-5">{{ prediction.created_at.strftime('%d %b %Y') }}</h2>
+          </div>
+        </div>
+      </div>
+
+      {% if advisory %}
+      <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <div class="fw-semibold mb-1">{{ advisory.alert_message }}</div>
+          <div class="text-secondary small">Suggested timeline: {{ advisory.deadline_label }} (by {{ advisory.deadline_date }})</div>
+        </div>
+        <span class="badge rounded-pill {{ advisory.badge_class }}">{{ advisory.priority }}</span>
+      </div>
+      {% endif %}
+
+      <h5 class="mb-2">Recommendation</h5>
+      <p class="text-secondary mb-0">{{ prediction.recommendation }}</p>
+      {% else %}
+      <div class="alert alert-light border mb-0">No prediction result is available yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">My Academic Summary</h4>
+      <div class="mb-2"><strong>Admission No:</strong> {{ student.admission_no }}</div>
+      <div class="mb-2"><strong>Department:</strong> {{ student.department.name }}</div>
+      <div class="mb-2"><strong>Programme:</strong> {{ student.course.program_level }}</div>
+      <div class="mb-2"><strong>Course:</strong> {{ student.course.name }}</div>
+      <div class="mb-2"><strong>Course Code:</strong> {{ student.course.code }}</div>
+      <div class="mb-2"><strong>Year of Study:</strong> {{ student.year_of_study }}</div>
+      <div class="mb-2"><strong>Semester:</strong> {{ student.semester }}</div>
+      {% if record %}
+      <div class="mb-2"><strong>Coursework Total:</strong> {{ record.coursework_total }}</div>
+      <div class="mb-2"><strong>Exam Mark:</strong> {{ record.exam_mark }}</div>
+      <div class="mb-2"><strong>Final Mark:</strong> {{ record.final_mark }}</div>
+      <div class="mb-2">
+        <strong>Academic Record Status:</strong>
+        <span class="badge rounded-pill {{ 'text-bg-success' if record.is_verified else 'text-bg-warning' }}">
+          {{ 'Verified' if record.is_verified else 'Pending Verification' }}
+        </span>
+      </div>
+      <div class="mb-0"><strong>Teacher Comment:</strong> {{ record.teacher_comment or 'No comment provided' }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if advisory %}
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">What Is Affecting Me Most</h4>
+      <ul class="mb-0 ps-3">
+        {% for driver in advisory.drivers %}
+        <li class="mb-2">{{ driver }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <h4 class="mb-3">What I Should Do Next</h4>
+      <ol class="mb-0 ps-3">
+        {% for step in advisory.action_plan %}
+        <li class="mb-2">{{ step }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <h4 class="mb-3">My Recent Prediction History</h4>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Risk</th>
+              <th>High Risk %</th>
+              <th>Recommendation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in history %}
+            <tr>
+              <td>{{ item.created_at.strftime('%d %b %Y') }}</td>
+              <td>
+                <span class="badge rounded-pill {{ 'text-bg-danger' if item.predicted_risk == 'High Risk' else 'text-bg-warning' if item.predicted_risk == 'Medium Risk' else 'text-bg-success' }}">
+                  {{ item.predicted_risk }}
+                </span>
+              </td>
+              <td>{{ '%.2f'|format(item.high_risk_probability) }}%</td>
+              <td class="text-secondary small">{{ item.recommendation }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-secondary">No prediction history available.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

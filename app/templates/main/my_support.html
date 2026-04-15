@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}My Support Messages | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">My Support Messages</h1>
+    <p class="text-secondary mb-0">View your support history and open conversations.</p>
+  </div>
+  <button type="button" class="btn btn-brand rounded-pill px-4" onclick="toggleChatPopup()">New Support Message</button>
+</div>
+
+<div class="row g-4">
+  {% for conversation in conversations %}
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <div>
+          <h4 class="mb-1">{{ conversation.subject }}</h4>
+          <div class="text-secondary small">
+            Type: {{ conversation.support_type }} • Last activity: {{ conversation.last_message_at.strftime('%d %b %Y %H:%M') }}
+          </div>
+        </div>
+        <span class="badge rounded-pill {{ 'text-bg-warning' if conversation.status == 'open' else 'text-bg-secondary' }}">
+          {{ conversation.status }}
+        </span>
+      </div>
+
+      <div class="text-secondary small mb-3">
+        {{ conversation.messages|length }} message{{ '' if conversation.messages|length == 1 else 's' }}
+      </div>
+
+      <a href="{{ url_for('main.my_support_conversation', conversation_id=conversation.id) }}" class="btn btn-outline-primary rounded-pill px-4">
+        Open Conversation
+      </a>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="text-secondary">You do not have any support conversations yet.</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

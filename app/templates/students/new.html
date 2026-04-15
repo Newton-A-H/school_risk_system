@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}New Learner Intake | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-9 col-lg-10">
+    <div class="panel-card p-4 p-lg-5">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="fw-bold mb-1">New Learner Intake</h1>
+          <p class="text-secondary mb-0">
+            Create the learner record and the student login account at the same time.
+          </p>
+        </div>
+        <a href="{{ url_for('students.index') }}" class="btn btn-outline-secondary rounded-pill px-4">Back</a>
+      </div>
+
+      <form method="post">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label">Admission Number</label>
+            <input type="text" name="admission_no" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-control">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Department</label>
+            <select name="department_id" id="departmentSelect" class="form-select" required onchange="filterStudentCourses()">
+              <option value="">Select department</option>
+              {% for dept in departments %}
+              <option value="{{ dept.id }}">{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Course</label>
+            <select name="course_id" id="courseSelect" class="form-select" required>
+              <option value="">Select course</option>
+              {% for course in courses %}
+              <option value="{{ course.id }}" data-department="{{ course.department_id }}">
+                {{ course.program_level }} - {{ course.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Year of Study</label>
+            <input type="number" name="year_of_study" class="form-control" min="1" required>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Semester</label>
+            <input type="text" name="semester" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Temporary Password</label>
+            <input type="text" name="temporary_password" class="form-control" required>
+            <div class="form-text">The learner will be required to change this after first login.</div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-brand rounded-pill px-4">Create Learner + Account</button>
+          <a href="{{ url_for('students.index') }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterStudentCourses() {
+  const departmentId = document.getElementById("departmentSelect").value;
+  const courseSelect = document.getElementById("courseSelect");
+  const options = courseSelect.querySelectorAll("option");
+
+  courseSelect.value = "";
+
+  options.forEach(option => {
+    if (!option.value) {
+      option.hidden = false;
+      return;
+    }
+
+    option.hidden = departmentId && option.dataset.department !== departmentId;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", filterStudentCourses);
+</script>
+{% endblock %}

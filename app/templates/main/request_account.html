@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}Request Account | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-9 col-lg-10">
+    <div class="panel-card p-4 p-lg-5">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="fw-bold mb-1">Request Account Creation</h1>
+          <p class="text-secondary mb-0">
+            Students and lecturers can request access here. After email verification and admin approval, the appropriate account and record will be created automatically.
+          </p>
+        </div>
+        <a href="{{ url_for('main.home') }}" class="btn btn-outline-secondary rounded-pill px-4">Back Home</a>
+      </div>
+
+      <form method="post">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-control">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Requested Role</label>
+            <select name="requested_role" id="requested_role" class="form-select" required onchange="toggleRequestFields()">
+              <option value="">Select role</option>
+              <option value="student">Student</option>
+              <option value="lecturer">Lecturer</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Department</label>
+            <select name="department_id" id="requestDepartmentSelect" class="form-select" onchange="filterRequestCourses()">
+              <option value="">Select department</option>
+              {% for dept in departments %}
+              <option value="{{ dept.id }}">{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6 student-only">
+            <label class="form-label">Course</label>
+            <select name="course_id" id="requestCourseSelect" class="form-select">
+              <option value="">Select course</option>
+              {% for course in courses %}
+              <option value="{{ course.id }}" data-department="{{ course.department_id }}">
+                {{ course.program_level }} - {{ course.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6 student-only">
+            <label class="form-label">Admission Number</label>
+            <input type="text" name="admission_no" class="form-control">
+          </div>
+
+          <div class="col-md-3 student-only">
+            <label class="form-label">Year of Study</label>
+            <input type="number" name="year_of_study" class="form-control" min="1">
+          </div>
+
+          <div class="col-md-3 student-only">
+            <label class="form-label">Semester</label>
+            <input type="text" name="semester" class="form-control">
+          </div>
+        </div>
+
+        <div class="alert alert-light border mt-4 mb-4">
+          After approval:
+          <br>
+          <strong>Student request:</strong> the student account and learner record will be linked automatically.
+          <br>
+          <strong>Lecturer request:</strong> the lecturer account will be created and assigned to the selected department.
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-brand rounded-pill px-4">Submit Request</button>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4">Go to Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleRequestFields() {
+  const role = document.getElementById("requested_role").value;
+  const studentFields = document.querySelectorAll(".student-only");
+
+  studentFields.forEach(field => {
+    field.style.display = role === "student" ? "block" : "none";
+  });
+
+  filterRequestCourses();
+}
+
+function filterRequestCourses() {
+  const departmentId = document.getElementById("requestDepartmentSelect").value;
+  const courseSelect = document.getElementById("requestCourseSelect");
+  const options = courseSelect.querySelectorAll("option");
+
+  courseSelect.value = "";
+
+  options.forEach(option => {
+    if (!option.value) {
+      option.hidden = false;
+      return;
+    }
+
+    option.hidden = departmentId && option.dataset.department !== departmentId;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  toggleRequestFields();
+  filterRequestCourses();
+});
+</script>
+{% endblock %}

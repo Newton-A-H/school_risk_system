@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | EduRisk AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="fw-bold mb-1">Dashboard</h1>
+    <p class="text-secondary mb-0">Professional academic monitoring, prediction and intervention support.</p>
+  </div>
+  <a href="{{ url_for('students.create') }}" class="btn btn-brand rounded-pill px-4">Add learner intake</a>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span>Total Learners</span>
+      <h2>{{ student_count }}</h2>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span>Total Predictions</span>
+      <h2>{{ prediction_count }}</h2>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span>Model Weighted F1</span>
+      <h2>{{ '%.2f'|format(analytics.model_meta.get('test_f1_weighted', 0)) }}</h2>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <div class="panel-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Risk Distribution Overview</h4>
+        <span class="badge text-bg-light">Live analytics</span>
+      </div>
+      <div style="height: 320px;">
+        <canvas id="riskChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-5">
+    <div class="panel-card p-4">
+      <h4 class="mb-3">Feature Importance</h4>
+      <div style="height: 320px;">
+        <canvas id="importanceChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% if analytics.top_feature_summary %}
+<div class="mt-3">
+  <h6 class="fw-semibold mb-2">Top School-Wide Risk Drivers</h6>
+  <ul class="small text-secondary mb-0">
+    {% for feature, score in analytics.top_feature_summary %}
+    <li>
+      <strong>{{ feature.replace('_', ' ').title() }}</strong>
+      — importance score {{ '%.4f'|format(score) }}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+<div class="row g-4 mt-1">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <h4 class="mb-3">Recent Prediction Log</h4>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Learner</th>
+              <th>Risk</th>
+              <th>High Risk %</th>
+              <th>Recommendation</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in recent_predictions %}
+            <tr>
+              <td>{{ p.student.full_name }}</td>
+              <td>
+                <span class="badge rounded-pill {{ 'text-bg-danger' if p.predicted_risk == 'High Risk' else 'text-bg-warning' if p.predicted_risk == 'Medium Risk' else 'text-bg-success' }}">
+                  {{ p.predicted_risk }}
+                </span>
+              </td>
+              <td>{{ '%.2f'|format(p.high_risk_probability) }}%</td>
+              <td class="text-secondary small">{{ p.recommendation }}</td>
+              <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-secondary">No predictions yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script id="dashboard-data" type="application/json">
+{{ {
+  "riskCounts": analytics.risk_counts,
+  "featureImportance": analytics.feature_importance
+} | tojson | safe }}
+</script>
+{% endblock %}

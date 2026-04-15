@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Add Student Account | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-7 col-lg-8">
+    <div class="panel-card p-4 p-lg-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="fw-bold mb-1">Create Student Account</h1>
+          <p class="text-secondary mb-0">Link a learner record to a login account.</p>
+        </div>
+        <a href="{{ url_for('admin.accounts') }}" class="btn btn-outline-secondary rounded-pill px-4">Back</a>
+      </div>
+
+      <form method="post">
+        <div class="row g-4">
+          <div class="col-12">
+            <label class="form-label">Select Learner</label>
+            <select name="student_id" class="form-select" required>
+              <option value="">Choose learner</option>
+              {% for student in students %}
+              <option value="{{ student.id }}">
+                {{ student.full_name }} — {{ student.admission_no }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Temporary Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-brand rounded-pill px-4">Create Student Account</button>
+          <a href="{{ url_for('admin.accounts') }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
