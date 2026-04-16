@@ -10,7 +10,7 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        "mssql+pyodbc://@localhost/AcademicRiskDB?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes",
+        "postgresql+psycopg://postgres:postgres@localhost:5432/academic_risk_db",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = False

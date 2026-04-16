@@ -1,6 +1,6 @@
 # EduSentinel AI
 
-EduSentinel AI is a Flask + SQL Server academic risk monitoring platform with role-based experiences for admins, lecturers, and students. It combines learner records, semester questionnaires, prediction history, intervention tracking, support conversations, and model-management pages in one school-focused system.
+EduSentinel AI is a Flask + PostgreSQL academic risk monitoring platform with role-based experiences for admins, lecturers, and students. It combines learner records, semester questionnaires, prediction history, intervention tracking, support conversations, and model-management pages in one school-focused system.
 
 ## What the current build includes
 
@@ -52,7 +52,7 @@ school_risk_system/
    ```powershell
    pip install -r requirements.txt
    ```
-3. Copy `.env.example` to `.env` and fill in your SQL Server and mail settings.
+3. Copy `.env.example` to `.env` and fill in your PostgreSQL and mail settings.
 4. Start the app.
    ```powershell
    python run.py
@@ -65,7 +65,7 @@ Minimum required values:
 
 ```env
 SECRET_KEY=change-me
-DATABASE_URL=mssql+pyodbc://sa:YourPassword123@localhost/AcademicRiskDB?driver=ODBC+Driver+17+for+SQL+Server&TrustServerCertificate=yes
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/academic_risk_db
 ARTIFACTS_DIR=artifacts
 ```
 
@@ -87,7 +87,7 @@ SESSION_COOKIE_SECURE=false
 Render deployment values:
 
 ```env
-DATABASE_URL=mssql+pyodbc://<user>:<password>@<server>.database.windows.net:1433/<database>?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no
+DATABASE_URL=postgresql+psycopg://<user>:<password>@<host>:5432/<database>
 ARTIFACTS_DIR=/app/artifacts
 SESSION_COOKIE_SECURE=true
 ```
@@ -111,7 +111,7 @@ with app.app_context():
 
 ## Running tests
 
-The test suite uses SQLite and disables SQL Server bootstrap automatically.
+The test suite uses SQLite and disables normal bootstrap side effects automatically.
 
 ```powershell
 pytest
@@ -129,8 +129,7 @@ Covered flows include:
 ## Deployment checklist
 
 - Set a strong non-default `SECRET_KEY`
-- Confirm `DATABASE_URL` points to the production SQL Server instance
-- Install the ODBC SQL Server driver on the host
+- Confirm `DATABASE_URL` points to the production PostgreSQL instance
 - Set `SESSION_COOKIE_SECURE=true` behind HTTPS
 - Configure mail credentials if email delivery is required
 - Run with a production WSGI server such as `gunicorn` or your Windows hosting equivalent
@@ -139,7 +138,7 @@ Covered flows include:
 
 ## Render deployment
 
-This repository is prepared for Render using a Docker web service. That is the safer path for this project because it depends on `pyodbc` and the SQL Server ODBC driver.
+This repository is prepared for Render using a Docker web service and PostgreSQL.
 
 Files added for deployment:
 
@@ -153,8 +152,8 @@ Files added for deployment:
 1. Create a new Render Web Service from this GitHub repository.
 2. Let Render build from the included `Dockerfile`.
 3. Attach a persistent disk mounted at `/app/artifacts`.
-4. Set the required environment variables in Render.
-5. Use Azure SQL Database or another reachable SQL Server instance.
+4. Create Render Postgres or use another reachable PostgreSQL provider such as Neon.
+5. Set the required environment variables in Render.
 
 ### Render environment variables
 
@@ -174,6 +173,19 @@ Set these values in Render:
 - `MAIL_PASSWORD`
 - `MAIL_DEFAULT_SENDER`
 
+Typical PostgreSQL connection string format:
+
+```env
+DATABASE_URL=postgresql+psycopg://<user>:<password>@<host>:5432/<database>
+```
+
+Examples:
+
+```env
+DATABASE_URL=postgresql+psycopg://postgres:secret123@dpg-abc123-a.oregon-postgres.render.com:5432/academic_risk_db
+DATABASE_URL=postgresql+psycopg://postgres:secret123@ep-cool-name.us-east-1.aws.neon.tech/academic_risk_db?sslmode=require
+```
+
 ### Render Blueprint
 
 The repository now includes `render.yaml`, so Render can import the service configuration directly from GitHub.
@@ -185,10 +197,11 @@ Important note:
 
 1. Push this repo to GitHub.
 2. In Render, create a new Blueprint or Web Service from the repository.
-3. Confirm the Docker service settings and persistent disk mount.
-4. Add the environment variables listed above.
-5. Trigger the first deploy.
-6. After deployment, check:
+3. Create the PostgreSQL database and copy its external connection string.
+4. Confirm the Docker service settings and persistent disk mount.
+5. Add the environment variables listed above.
+6. Trigger the first deploy.
+7. After deployment, check:
    - `https://<your-render-service>.onrender.com/health`
    - admin login
    - database connectivity
@@ -200,8 +213,15 @@ Important note:
 - `startup.sh` uses `gunicorn` and listens on the `PORT` value that Render provides.
 - If you retrain the model in production, keep `ARTIFACTS_DIR=/app/artifacts` and attach the persistent disk there.
 
+## PostgreSQL migration notes
+
+- The app now connects with the `postgresql+psycopg` SQLAlchemy dialect.
+- The SQL Server-specific bootstrap logic has been replaced with ORM-driven schema creation via `db.create_all()`.
+- The old SQL scripts in `sql/` are kept only as legacy reference and should not be reused as PostgreSQL scripts without conversion.
+- Existing Alembic migration files were written for SQL Server-era schema history; for a clean PostgreSQL deployment, start from the current models and generate new PostgreSQL-safe migrations if you choose to use Alembic later.
+
 ## Notes
 
 - When the trained model artifact is missing, the app falls back to its starter rule-based prediction path.
 - `AGENTS.md` contains repository-specific guidance for future Codex sessions.
-- Database bootstrap is intended for the SQL Server environment and should stay enabled for normal local development unless you are running tests.
+- Database bootstrap is now ORM-based and should stay enabled for normal PostgreSQL development unless you are running tests.

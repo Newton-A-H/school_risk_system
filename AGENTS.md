@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-EduSentinel AI is a Flask + SQL Server academic risk monitoring system with role-based interfaces for admin, lecturer, and student users.
+EduSentinel AI is a Flask + PostgreSQL academic risk monitoring system with role-based interfaces for admin, lecturer, and student users.
 
 ## Architecture
 - Flask app package: `app/`
@@ -22,7 +22,7 @@ EduSentinel AI is a Flask + SQL Server academic risk monitoring system with role
 - Prefer full-file rewrites over fragile partial edits when files have drifted.
 - Keep route names, template names, and model fields aligned.
 - Do not introduce template variables unless every render path passes them.
-- Do not invent new database columns without also specifying the SQL Server migration/update needed.
+- Do not invent new database columns without also specifying how the PostgreSQL schema should be updated.
 - Keep Bootstrap-based styling consistent with current UI.
 - Protect admin, lecturer, and student routes correctly.
 - Lecturer access must stay scoped to department.
@@ -31,7 +31,7 @@ EduSentinel AI is a Flask + SQL Server academic risk monitoring system with role
 
 ## Before editing
 - Read the relevant route, model, and template files first.
-- Check for schema drift between SQLAlchemy and SQL Server assumptions.
+- Check for schema drift between SQLAlchemy models, bootstrap logic, and migration assumptions.
 - Identify likely breakpoints from earlier changes.
 
 ## After editing
