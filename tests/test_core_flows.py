@@ -103,11 +103,14 @@ def test_student_dashboard_access(client):
     history_response = client.get("/student/prediction-history")
     profile_response = client.get("/student/profile")
     report_response = client.get("/student/report")
+    change_password_response = client.get("/auth/change-password")
 
     assert dashboard_response.status_code == 200
     assert history_response.status_code == 200
     assert profile_response.status_code == 200
     assert report_response.status_code == 200
+    assert change_password_response.status_code == 200
+    assert b"Save New Password" in change_password_response.data
 
 
 def test_notification_center_and_bulk_import(app, client):
