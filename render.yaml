@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: edusentinel-ai
+    runtime: docker
+    region: oregon
+    plan: starter
+    numInstances: 1
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: commit
+    healthCheckPath: /health
+    disk:
+      name: edusentinel-artifacts
+      mountPath: /app/artifacts
+      sizeGB: 1
+    envVars:
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ARTIFACTS_DIR
+        value: /app/artifacts
+      - key: BOOTSTRAP_DATABASE
+        value: "true"
+      - key: VALIDATE_STARTUP
+        value: "true"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: MAIL_ENABLED
+        value: "false"

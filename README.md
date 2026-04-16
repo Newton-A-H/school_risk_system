@@ -84,11 +84,11 @@ VALIDATE_STARTUP=true
 SESSION_COOKIE_SECURE=false
 ```
 
-Azure App Service custom container values:
+Render deployment values:
 
 ```env
 DATABASE_URL=mssql+pyodbc://<user>:<password>@<server>.database.windows.net:1433/<database>?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no
-ARTIFACTS_DIR=/home/site/artifacts
+ARTIFACTS_DIR=/app/artifacts
 SESSION_COOKIE_SECURE=true
 ```
 
@@ -137,32 +137,32 @@ Covered flows include:
 - Verify the `artifacts/` folder contains the trained model files before relying on AI predictions
 - Create the first admin account and test each role login
 
-## Azure App Service deployment
+## Render deployment
 
-This repository is prepared for Azure App Service using a custom Linux container. That is the safest path for this project because it depends on `pyodbc` and the SQL Server ODBC driver.
+This repository is prepared for Render using a Docker web service. That is the safer path for this project because it depends on `pyodbc` and the SQL Server ODBC driver.
 
-Files added for Azure deployment:
+Files added for deployment:
 
 - `Dockerfile`
 - `startup.sh`
 - `wsgi.py`
-- `.github/workflows/deploy-azure-appservice.yml`
+- `render.yaml`
 
-### Recommended Azure architecture
+### Recommended Render setup
 
-1. Create an Azure Container Registry (ACR).
-2. Create an Azure App Service Web App for Containers.
-3. Point the App Service to the ACR image.
-4. Let GitHub Actions build and push the image on every push to `main`.
+1. Create a new Render Web Service from this GitHub repository.
+2. Let Render build from the included `Dockerfile`.
+3. Attach a persistent disk mounted at `/app/artifacts`.
+4. Set the required environment variables in Render.
 5. Use Azure SQL Database or another reachable SQL Server instance.
 
-### Azure App Service settings
+### Render environment variables
 
-Set these app settings in Azure:
+Set these values in Render:
 
 - `SECRET_KEY`
 - `DATABASE_URL`
-- `ARTIFACTS_DIR=/home/site/artifacts`
+- `ARTIFACTS_DIR=/app/artifacts`
 - `BOOTSTRAP_DATABASE=true`
 - `VALIDATE_STARTUP=true`
 - `SESSION_COOKIE_SECURE=true`
@@ -173,37 +173,32 @@ Set these app settings in Azure:
 - `MAIL_USERNAME`
 - `MAIL_PASSWORD`
 - `MAIL_DEFAULT_SENDER`
-- `WEBSITES_PORT=8000`
-- `WEBSITES_ENABLE_APP_SERVICE_STORAGE=true`
 
-### GitHub secrets for the workflow
+### Render Blueprint
 
-Add these repository secrets in GitHub:
+The repository now includes `render.yaml`, so Render can import the service configuration directly from GitHub.
 
-- `ACR_LOGIN_SERVER`
-- `ACR_USERNAME`
-- `ACR_PASSWORD`
-- `AZURE_WEBAPP_NAME`
-- `AZURE_WEBAPP_PUBLISH_PROFILE`
+Important note:
+- Keep the persistent disk mounted at `/app/artifacts` so trained model files and model history survive redeploys.
 
 ### Deployment flow
 
-1. Create the App Service and ACR in Azure.
-2. Download the App Service publish profile from Azure Portal.
-3. Add the required GitHub secrets.
-4. Push to `main`.
-5. GitHub Actions builds the container, pushes it to ACR, and updates Azure App Service.
+1. Push this repo to GitHub.
+2. In Render, create a new Blueprint or Web Service from the repository.
+3. Confirm the Docker service settings and persistent disk mount.
+4. Add the environment variables listed above.
+5. Trigger the first deploy.
 6. After deployment, check:
-   - `https://<your-app-name>.azurewebsites.net/health`
+   - `https://<your-render-service>.onrender.com/health`
    - admin login
    - database connectivity
-   - model artifact persistence under `/home/site/artifacts`
+   - model artifact persistence under `/app/artifacts`
 
 ### Notes for production
 
 - The health endpoint is available at `/health` and `/healthz`.
-- `startup.sh` uses `gunicorn` and listens on port `8000`, so Azure must have `WEBSITES_PORT=8000`.
-- If you retrain the model in production, set `ARTIFACTS_DIR=/home/site/artifacts` so model files and history survive restarts.
+- `startup.sh` uses `gunicorn` and listens on the `PORT` value that Render provides.
+- If you retrain the model in production, keep `ARTIFACTS_DIR=/app/artifacts` and attach the persistent disk there.
 
 ## Notes
 
