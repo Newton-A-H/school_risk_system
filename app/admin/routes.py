@@ -25,15 +25,11 @@ from ..models import (
 )
 from ..utils.decorators import role_required
 from ..services.email_service import send_verification_email, send_temp_password_email
+from ..services.artifact_store import META_FILE, IMPORTANCE_FILE, HISTORY_FILE
 from ..ml.training import train_and_save_model
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
-
-META_FILE = os.path.join("artifacts", "model_meta.json")
-IMPORTANCE_FILE = os.path.join("artifacts", "feature_importance.json")
-HISTORY_FILE = os.path.join("artifacts", "model_history.json")
-
 
 def load_json_file(path, default):
     if os.path.exists(path):

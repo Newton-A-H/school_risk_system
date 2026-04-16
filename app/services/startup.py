@@ -1,3 +1,6 @@
+import os
+
+
 def validate_runtime_config(app):
     issues = []
 
@@ -7,8 +10,14 @@ def validate_runtime_config(app):
     if not database_uri:
         issues.append("DATABASE_URL is missing.")
 
+    if not app.config.get("ARTIFACTS_DIR"):
+        issues.append("ARTIFACTS_DIR is missing.")
+
     if secret_key in {"", "dev-secret-key"} and not app.config.get("TESTING"):
         issues.append("SECRET_KEY is using the default development value.")
+
+    if os.environ.get("WEBSITE_HOSTNAME") and not os.environ.get("ARTIFACTS_DIR"):
+        issues.append("ARTIFACTS_DIR is not set for Azure App Service. Model files may not persist between restarts.")
 
     if app.config.get("MAIL_ENABLED"):
         required_mail_settings = [

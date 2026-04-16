@@ -3,11 +3,7 @@ import os
 
 import joblib
 import pandas as pd
-
-
-ARTIFACTS_DIR = "artifacts"
-MODEL_FILE = os.path.join(ARTIFACTS_DIR, "best_model.pkl")
-META_FILE = os.path.join(ARTIFACTS_DIR, "model_meta.json")
+from ..services.artifact_store import MODEL_FILE, META_FILE
 
 
 def _load_meta():

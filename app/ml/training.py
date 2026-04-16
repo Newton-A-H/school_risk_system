@@ -11,15 +11,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from ..models import Student, AcademicRecord, QuestionnaireResponse
 from ..extensions import db
-
-
-ARTIFACTS_DIR = "artifacts"
-MODEL_FILE = os.path.join(ARTIFACTS_DIR, "best_model.pkl")
-META_FILE = os.path.join(ARTIFACTS_DIR, "model_meta.json")
-IMPORTANCE_FILE = os.path.join(ARTIFACTS_DIR, "feature_importance.json")
-HISTORY_FILE = os.path.join(ARTIFACTS_DIR, "model_history.json")
+from ..models import Student, AcademicRecord, QuestionnaireResponse
+from ..services.artifact_store import (
+    MODEL_FILE,
+    META_FILE,
+    IMPORTANCE_FILE,
+    HISTORY_FILE,
+    ensure_artifacts_dir,
+)
 
 
 FEATURE_COLUMNS = [
@@ -50,10 +50,6 @@ CATEGORICAL_FEATURES = [
     "main_challenge",
     "early_warning_helpful",
 ]
-
-
-def _ensure_artifacts_dir():
-    os.makedirs(ARTIFACTS_DIR, exist_ok=True)
 
 
 def _write_artifacts(meta, importance):
@@ -182,7 +178,7 @@ def _build_dataframe():
 
 
 def train_and_save_model():
-    _ensure_artifacts_dir()
+    ensure_artifacts_dir()
     trained_at = pd.Timestamp.utcnow().isoformat()
 
     df = _build_dataframe()

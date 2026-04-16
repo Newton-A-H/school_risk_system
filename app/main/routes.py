@@ -3,8 +3,9 @@ import json
 import os
 from datetime import datetime
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user, login_required
+from sqlalchemy import text
 
 from ..extensions import db
 from ..models import (
@@ -20,11 +21,11 @@ from ..models import (
     RiskPrediction,
 )
 from ..services.email_service import send_verification_email
+from ..services.artifact_store import META_FILE
 from ..services.token_service import verify_token
 
 
 main_bp = Blueprint("main", __name__)
-META_FILE = os.path.join("artifacts", "model_meta.json")
 
 
 SUPPORT_OPTIONS = [
@@ -72,6 +73,31 @@ def home():
         if current_user.role == "student":
             return redirect(url_for("student_portal.dashboard"))
     return render_template("main/home.html")
+
+
+@main_bp.route("/health")
+@main_bp.route("/healthz")
+def health_check():
+    database_ok = True
+    error_message = None
+
+    try:
+        db.session.execute(text("SELECT 1"))
+    except Exception as exc:
+        database_ok = False
+        error_message = str(exc)
+
+    status_code = 200 if database_ok else 503
+    return (
+        jsonify(
+            {
+                "status": "ok" if database_ok else "degraded",
+                "database": "reachable" if database_ok else "unreachable",
+                "error": error_message,
+            }
+        ),
+        status_code,
+    )
 
 
 @main_bp.route("/request-account", methods=["GET", "POST"])

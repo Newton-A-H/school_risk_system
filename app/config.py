@@ -14,6 +14,7 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = False
+    ARTIFACTS_DIR = os.environ.get("ARTIFACTS_DIR", "artifacts")
     BOOTSTRAP_DATABASE = os.environ.get("BOOTSTRAP_DATABASE", "true").lower() == "true"
     VALIDATE_STARTUP = os.environ.get("VALIDATE_STARTUP", "true").lower() == "true"
 

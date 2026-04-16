@@ -11,6 +11,13 @@ def test_login_redirects_admin_to_dashboard(client):
     assert "/admin/dashboard" in response.headers["Location"]
 
 
+def test_health_endpoint(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json["status"] == "ok"
+    assert response.json["database"] == "reachable"
+
+
 def test_public_account_request_verify_and_admin_approval(app, client):
     test_ids = app.config["TEST_IDS"]
 

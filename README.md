@@ -66,6 +66,7 @@ Minimum required values:
 ```env
 SECRET_KEY=change-me
 DATABASE_URL=mssql+pyodbc://sa:YourPassword123@localhost/AcademicRiskDB?driver=ODBC+Driver+17+for+SQL+Server&TrustServerCertificate=yes
+ARTIFACTS_DIR=artifacts
 ```
 
 Optional operational settings:
@@ -81,6 +82,14 @@ MAIL_DEFAULT_SENDER=noreply@edusentinel.ai
 BOOTSTRAP_DATABASE=true
 VALIDATE_STARTUP=true
 SESSION_COOKIE_SECURE=false
+```
+
+Azure App Service custom container values:
+
+```env
+DATABASE_URL=mssql+pyodbc://<user>:<password>@<server>.database.windows.net:1433/<database>?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no
+ARTIFACTS_DIR=/home/site/artifacts
+SESSION_COOKIE_SECURE=true
 ```
 
 ## First admin setup
@@ -127,6 +136,74 @@ Covered flows include:
 - Run with a production WSGI server such as `gunicorn` or your Windows hosting equivalent
 - Verify the `artifacts/` folder contains the trained model files before relying on AI predictions
 - Create the first admin account and test each role login
+
+## Azure App Service deployment
+
+This repository is prepared for Azure App Service using a custom Linux container. That is the safest path for this project because it depends on `pyodbc` and the SQL Server ODBC driver.
+
+Files added for Azure deployment:
+
+- `Dockerfile`
+- `startup.sh`
+- `wsgi.py`
+- `.github/workflows/deploy-azure-appservice.yml`
+
+### Recommended Azure architecture
+
+1. Create an Azure Container Registry (ACR).
+2. Create an Azure App Service Web App for Containers.
+3. Point the App Service to the ACR image.
+4. Let GitHub Actions build and push the image on every push to `main`.
+5. Use Azure SQL Database or another reachable SQL Server instance.
+
+### Azure App Service settings
+
+Set these app settings in Azure:
+
+- `SECRET_KEY`
+- `DATABASE_URL`
+- `ARTIFACTS_DIR=/home/site/artifacts`
+- `BOOTSTRAP_DATABASE=true`
+- `VALIDATE_STARTUP=true`
+- `SESSION_COOKIE_SECURE=true`
+- `MAIL_ENABLED`
+- `MAIL_SERVER`
+- `MAIL_PORT`
+- `MAIL_USE_TLS`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+- `MAIL_DEFAULT_SENDER`
+- `WEBSITES_PORT=8000`
+- `WEBSITES_ENABLE_APP_SERVICE_STORAGE=true`
+
+### GitHub secrets for the workflow
+
+Add these repository secrets in GitHub:
+
+- `ACR_LOGIN_SERVER`
+- `ACR_USERNAME`
+- `ACR_PASSWORD`
+- `AZURE_WEBAPP_NAME`
+- `AZURE_WEBAPP_PUBLISH_PROFILE`
+
+### Deployment flow
+
+1. Create the App Service and ACR in Azure.
+2. Download the App Service publish profile from Azure Portal.
+3. Add the required GitHub secrets.
+4. Push to `main`.
+5. GitHub Actions builds the container, pushes it to ACR, and updates Azure App Service.
+6. After deployment, check:
+   - `https://<your-app-name>.azurewebsites.net/health`
+   - admin login
+   - database connectivity
+   - model artifact persistence under `/home/site/artifacts`
+
+### Notes for production
+
+- The health endpoint is available at `/health` and `/healthz`.
+- `startup.sh` uses `gunicorn` and listens on port `8000`, so Azure must have `WEBSITES_PORT=8000`.
+- If you retrain the model in production, set `ARTIFACTS_DIR=/home/site/artifacts` so model files and history survive restarts.
 
 ## Notes
 
