@@ -2,8 +2,9 @@ from flask import Blueprint, render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 
 from ..extensions import db
-from ..models import Student, AcademicRecord, QuestionnaireResponse, RiskPrediction, InterventionLog
+from ..models import Student, AcademicRecord, QuestionnaireResponse, RiskPrediction, InterventionLog, StudentUnitRegistration
 from ..services.advisory import generate_advisory
+from ..services.academic import get_default_academic_year, get_term_calendar, get_term_types, normalize_term_type, validate_term_selection
 from ..utils.decorators import role_required
 
 
@@ -57,6 +58,16 @@ def dashboard():
         .order_by(RiskPrediction.created_at.desc())
         .all()
     )
+    current_units = (
+        StudentUnitRegistration.query.filter_by(
+            student_id=student.id,
+            academic_year=student.academic_year,
+            term_type=student.term_type,
+            term_name=student.semester,
+        )
+        .order_by(StudentUnitRegistration.created_at.desc())
+        .all()
+    )
 
     advisory = None
     if record and response and prediction:
@@ -73,6 +84,7 @@ def dashboard():
         response=response,
         prediction=prediction,
         history=history,
+        current_units=current_units,
         advisory=advisory,
         not_linked=False,
     )
@@ -107,7 +119,16 @@ def profile():
         flash("Profile updated successfully.", "success")
         return redirect(url_for("student_portal.profile"))
 
-    return render_template("student_portal/profile.html", student=student)
+    current_units = (
+        StudentUnitRegistration.query.filter_by(
+            student_id=student.id,
+            academic_year=student.academic_year,
+            term_type=student.term_type,
+            term_name=student.semester,
+        )
+        .all()
+    )
+    return render_template("student_portal/profile.html", student=student, current_units=current_units)
 
 
 @student_portal_bp.route("/academic-history")
@@ -142,6 +163,84 @@ def questionnaire_history():
         .all()
     )
     return render_template("student_portal/questionnaire_history.html", student=student, responses=responses)
+
+
+@student_portal_bp.route("/questionnaire/new", methods=["GET", "POST"])
+@login_required
+@role_required("student")
+def add_questionnaire():
+    student = _resolve_student_for_current_user()
+    if not student:
+        flash("Your account is not linked to a learner profile yet.", "warning")
+        return redirect(url_for("student_portal.dashboard"))
+
+    if request.method == "POST":
+        academic_year = request.form.get("academic_year", "").strip() or student.academic_year or get_default_academic_year()
+        term_type = normalize_term_type(request.form.get("term_type", "")) or student.term_type
+        term_name = request.form.get("term_name", "").strip()
+        attendance_frequency = request.form.get("attendance_frequency", "").strip()
+        coursework_on_time = request.form.get("coursework_on_time", "").strip()
+        main_challenge = request.form.get("main_challenge", "").strip()
+        early_warning_helpful = request.form.get("early_warning_helpful", "").strip()
+        study_hours_per_week = request.form.get("study_hours_per_week", "").strip()
+
+        if not validate_term_selection(term_type, term_name):
+            flash("Please choose a valid semester or trimester before saving your check-in.", "danger")
+            return render_template(
+                "student_portal/questionnaire_new.html",
+                student=student,
+                term_types=get_term_types(),
+                term_calendar=get_term_calendar(),
+                default_academic_year=get_default_academic_year(),
+            )
+
+        if not attendance_frequency or not coursework_on_time or not main_challenge or not early_warning_helpful or not study_hours_per_week:
+            flash("Please complete all check-in fields.", "danger")
+            return render_template(
+                "student_portal/questionnaire_new.html",
+                student=student,
+                term_types=get_term_types(),
+                term_calendar=get_term_calendar(),
+                default_academic_year=get_default_academic_year(),
+            )
+
+        try:
+            study_hours_value = float(study_hours_per_week)
+        except ValueError:
+            flash("Study hours per week must be a valid number.", "danger")
+            return render_template(
+                "student_portal/questionnaire_new.html",
+                student=student,
+                term_types=get_term_types(),
+                term_calendar=get_term_calendar(),
+                default_academic_year=get_default_academic_year(),
+            )
+
+        db.session.add(
+            QuestionnaireResponse(
+                student_id=student.id,
+                term_name=term_name,
+                term_type=term_type,
+                academic_year=academic_year,
+                attendance_frequency=attendance_frequency,
+                coursework_on_time=coursework_on_time,
+                main_challenge=main_challenge,
+                early_warning_helpful=early_warning_helpful,
+                study_hours_per_week=study_hours_value,
+            )
+        )
+        db.session.commit()
+
+        flash("Your check-in has been saved.", "success")
+        return redirect(url_for("student_portal.questionnaire_history"))
+
+    return render_template(
+        "student_portal/questionnaire_new.html",
+        student=student,
+        term_types=get_term_types(),
+        term_calendar=get_term_calendar(),
+        default_academic_year=get_default_academic_year(),
+    )
 
 
 @student_portal_bp.route("/prediction-history")

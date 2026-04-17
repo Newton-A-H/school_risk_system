@@ -17,8 +17,30 @@
       <form method="post">
         <div class="row g-4">
           <div class="col-md-6">
-            <label class="form-label">Term or Academic Period</label>
-            <input type="text" name="term_name" class="form-control" placeholder="For example: Term 1 2026" required>
+            <label class="form-label">Academic Year</label>
+            <input type="text" name="academic_year" class="form-control" value="{{ student.academic_year or default_academic_year }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Term Structure</label>
+            <select name="term_type" id="academicTermType" class="form-select" required onchange="filterAcademicTerms()">
+              <option value="">Select one</option>
+              {% for value, label in term_types %}
+              <option value="{{ value }}" {{ 'selected' if student.term_type == value else '' }}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Semester / Trimester</label>
+            <select name="term_name" id="academicTermName" class="form-select" required>
+              <option value="">Select one</option>
+              {% for term_type, options in term_choices.items() %}
+                {% for term_name in options %}
+                <option value="{{ term_name }}" data-term-type="{{ term_type }}" {{ 'selected' if student.semester == term_name else '' }}>{{ term_name }}</option>
+                {% endfor %}
+              {% endfor %}
+            </select>
           </div>
 
           <div class="col-md-6">
@@ -53,7 +75,29 @@
           <a href="{{ url_for('students.detail', student_id=student.id) }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
         </div>
       </form>
+
+      <div class="alert alert-light border mt-4 mb-0">
+        <strong>Academic calendar</strong><br>
+        {% for item in term_calendar %}
+        <div class="small {% if not loop.last %}mb-2{% endif %}">{{ item.label }}: {% for term in item.terms %}{{ term.name }} ({{ term.window }}){% if not loop.last %}, {% endif %}{% endfor %}</div>
+        {% endfor %}
+      </div>
     </div>
   </div>
 </div>
+<script>
+function filterAcademicTerms() {
+  const termType = document.getElementById("academicTermType").value;
+  const select = document.getElementById("academicTermName");
+  const options = select.querySelectorAll("option");
+  options.forEach(option => {
+    if (!option.value) {
+      option.hidden = false;
+      return;
+    }
+    option.hidden = termType && option.dataset.termType !== termType;
+  });
+}
+document.addEventListener("DOMContentLoaded", filterAcademicTerms);
+</script>
 {% endblock %}

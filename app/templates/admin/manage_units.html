@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Units | EduSentinel AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-copy">
+    <div class="page-eyebrow">Course Structure</div>
+    <h1 class="page-title">{{ course.name }} Units</h1>
+    <p class="page-subtitle">Set up the units available under this course so learner registration stays accurate.</p>
+  </div>
+  <a href="{{ url_for('admin.courses') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Courses</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Add Unit</div>
+          <h4 class="section-title">New Unit</h4>
+        </div>
+      </div>
+      <form method="post" class="d-grid gap-3">
+        <div>
+          <label class="form-label">Unit Name</label>
+          <input type="text" name="name" class="form-control" required>
+        </div>
+        <div>
+          <label class="form-label">Unit Code</label>
+          <input type="text" name="code" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-brand rounded-pill px-4">Save Unit</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Course Units</div>
+          <h4 class="section-title">Current List</h4>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Unit Name</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for unit in course.units %}
+            <tr>
+              <td>{{ unit.code }}</td>
+              <td>{{ unit.name }}</td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('admin.delete_unit', unit_id=unit.id) }}" onsubmit="return confirm('Delete this unit?');">
+                  <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="3"><div class="empty-state">No units have been added to this course yet.</div></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

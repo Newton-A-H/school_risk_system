@@ -73,8 +73,30 @@
           </div>
 
           <div class="col-md-3 student-only">
-            <label class="form-label">Semester</label>
-            <input type="text" name="semester" class="form-control">
+            <label class="form-label">Academic Year</label>
+            <input type="text" name="academic_year" class="form-control" value="{{ default_academic_year }}">
+          </div>
+
+          <div class="col-md-3 student-only">
+            <label class="form-label">Term Structure</label>
+            <select name="term_type" id="requestTermType" class="form-select" onchange="filterRequestTerms()">
+              <option value="">Select one</option>
+              {% for value, label in term_types %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3 student-only">
+            <label class="form-label">Semester / Trimester</label>
+            <select name="semester" id="requestTermName" class="form-select">
+              <option value="">Select one</option>
+              {% for item in term_calendar %}
+                {% for term in item.terms %}
+                <option value="{{ term.name }}" data-term-type="{{ item.term_type }}">{{ term.name }}</option>
+                {% endfor %}
+              {% endfor %}
+            </select>
           </div>
         </div>
 
@@ -82,6 +104,10 @@
           <strong>What happens next?</strong><br>
           If you are a student, your login will be linked to your learner record.<br>
           If you are a lecturer, your account will be attached to the department you selected.
+          <hr>
+          {% for item in term_calendar %}
+          <div class="small {% if not loop.last %}mb-2{% endif %}">{{ item.label }}: {% for term in item.terms %}{{ term.name }} ({{ term.window }}){% if not loop.last %}, {% endif %}{% endfor %}</div>
+          {% endfor %}
         </div>
 
         <div class="d-flex flex-wrap gap-2">
@@ -122,9 +148,27 @@ function filterRequestCourses() {
   });
 }
 
+function filterRequestTerms() {
+  const termType = document.getElementById("requestTermType").value;
+  const select = document.getElementById("requestTermName");
+  const options = select.querySelectorAll("option");
+
+  select.value = "";
+
+  options.forEach(option => {
+    if (!option.value) {
+      option.hidden = false;
+      return;
+    }
+
+    option.hidden = termType && option.dataset.termType !== termType;
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   toggleRequestFields();
   filterRequestCourses();
+  filterRequestTerms();
 });
 </script>
 {% endblock %}

@@ -34,6 +34,23 @@ class Course(db.Model):
 
     students = db.relationship("Student", backref="course", lazy=True)
     account_requests = db.relationship("AccountRequest", backref="course", lazy=True)
+    units = db.relationship(
+        "Unit",
+        backref="course",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="Unit.code.asc()",
+    )
+
+
+class Unit(db.Model):
+    __tablename__ = "units"
+
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False, index=True)
+    name = db.Column(db.String(150), nullable=False)
+    code = db.Column(db.String(30), nullable=False, unique=True, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 
 class User(UserMixin, db.Model):
@@ -116,6 +133,8 @@ class Student(db.Model):
 
     year_of_study = db.Column(db.Integer, nullable=False)
     semester = db.Column(db.String(20), nullable=False)
+    term_type = db.Column(db.String(20), nullable=False, default="semester")
+    academic_year = db.Column(db.String(20), nullable=False, default="")
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     lecturer_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
@@ -146,6 +165,13 @@ class Student(db.Model):
         lazy=True,
         cascade="all, delete-orphan",
     )
+    unit_registrations = db.relationship(
+        "StudentUnitRegistration",
+        backref="student",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="StudentUnitRegistration.created_at.desc()",
+    )
 
 
 class AcademicRecord(db.Model):
@@ -154,6 +180,8 @@ class AcademicRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
     term_name = db.Column(db.String(50), nullable=False)
+    term_type = db.Column(db.String(20), nullable=False, default="semester")
+    academic_year = db.Column(db.String(20), nullable=False, default="")
 
     assignment_mark = db.Column(db.Float, nullable=True, default=0.0)
     cat_mark = db.Column(db.Float, nullable=False, default=0.0)
@@ -184,6 +212,9 @@ class QuestionnaireResponse(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    term_name = db.Column(db.String(50), nullable=False, default="")
+    term_type = db.Column(db.String(20), nullable=False, default="semester")
+    academic_year = db.Column(db.String(20), nullable=False, default="")
 
     attendance_frequency = db.Column(db.String(50), nullable=False)
     coursework_on_time = db.Column(db.String(50), nullable=False)
@@ -214,6 +245,29 @@ class RiskPrediction(db.Model):
     questionnaire_response = db.relationship("QuestionnaireResponse", backref="predictions")
 
 
+class StudentUnitRegistration(db.Model):
+    __tablename__ = "student_unit_registrations"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "student_id",
+            "unit_id",
+            "academic_year",
+            "term_name",
+            name="uq_student_unit_registration_term",
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False, index=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey("units.id"), nullable=False, index=True)
+    academic_year = db.Column(db.String(20), nullable=False)
+    term_name = db.Column(db.String(50), nullable=False)
+    term_type = db.Column(db.String(20), nullable=False, default="semester")
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    unit = db.relationship("Unit", backref="registrations")
+
+
 class AccountRequest(db.Model):
     __tablename__ = "account_requests"
 
@@ -226,6 +280,8 @@ class AccountRequest(db.Model):
     admission_no = db.Column(db.String(50), nullable=True)
     year_of_study = db.Column(db.Integer, nullable=True)
     semester = db.Column(db.String(20), nullable=True)
+    term_type = db.Column(db.String(20), nullable=True)
+    academic_year = db.Column(db.String(20), nullable=True)
 
     department_id = db.Column(db.Integer, db.ForeignKey("departments.id"), nullable=True)
     course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=True)

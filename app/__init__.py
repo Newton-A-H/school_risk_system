@@ -4,6 +4,7 @@ from flask_login import current_user
 from .config import Config
 from .extensions import db, login_manager, migrate
 from .models import FeedbackConversation, AccountRequest, Student, AcademicRecord, InterventionLog, RiskPrediction
+from .services.rate_limit import check_rate_limit
 
 
 def create_app(config_overrides=None):
@@ -32,6 +33,10 @@ def create_app(config_overrides=None):
     app.register_blueprint(admin_bp)
     app.register_blueprint(lecturer_bp)
     app.register_blueprint(student_portal_bp)
+
+    @app.before_request
+    def apply_rate_limit():
+        return check_rate_limit()
 
     @app.context_processor
     def inject_feedback_conversation():

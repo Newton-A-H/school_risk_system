@@ -11,18 +11,19 @@
   </div>
   <div class="table-responsive">
     <table class="table align-middle mb-0">
-      <thead><tr><th>Term</th><th>Coursework</th><th>Exam</th><th>Final Mark</th><th>Status</th></tr></thead>
+      <thead><tr><th>Academic Year</th><th>Term</th><th>Coursework</th><th>Exam</th><th>Final Mark</th><th>Status</th></tr></thead>
       <tbody>
         {% for record in records %}
         <tr>
-          <td>{{ record.term_name }}</td>
+          <td>{{ record.academic_year }}</td>
+          <td>{{ record.term_name }} ({{ record.term_type|title }})</td>
           <td>{{ record.coursework_total }}</td>
           <td>{{ record.exam_mark }}</td>
           <td>{{ record.final_mark }}</td>
           <td>{{ 'Verified' if record.is_verified else 'Pending' }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="5"><div class="empty-state">No academic records have been added yet.</div></td></tr>
+        <tr><td colspan="6"><div class="empty-state">No academic records have been added yet.</div></td></tr>
         {% endfor %}
       </tbody>
     </table>

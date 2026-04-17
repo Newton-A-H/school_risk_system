@@ -22,6 +22,7 @@ from ..models import (
 )
 from ..services.email_service import send_verification_email
 from ..services.artifact_store import META_FILE
+from ..services.academic import get_default_academic_year, get_term_calendar, get_term_types, normalize_term_type
 from ..services.token_service import verify_token
 
 
@@ -123,10 +124,19 @@ def request_account():
         admission_no = request.form.get("admission_no", "").strip()
         year_of_study = request.form.get("year_of_study", "").strip()
         semester = request.form.get("semester", "").strip()
+        term_type = normalize_term_type(request.form.get("term_type", ""))
+        academic_year = request.form.get("academic_year", "").strip() or get_default_academic_year()
 
         if not full_name or not email or not requested_role:
             flash("Full name, email, and requested role are required.", "danger")
-            return render_template("main/request_account.html", departments=departments, courses=courses)
+            return render_template(
+                "main/request_account.html",
+                departments=departments,
+                courses=courses,
+                term_types=get_term_types(),
+                term_calendar=get_term_calendar(),
+                default_academic_year=get_default_academic_year(),
+            )
 
         existing_request = AccountRequest.query.filter_by(email=email).first()
         if existing_request:
@@ -134,14 +144,28 @@ def request_account():
             return redirect(url_for("main.request_status_by_email", email=email))
 
         if requested_role == "student":
-            if not department_id or not course_id or not admission_no or not year_of_study or not semester:
-                flash("Student requests must include admission number, department, course, year of study, and semester.", "danger")
-                return render_template("main/request_account.html", departments=departments, courses=courses)
+            if not department_id or not course_id or not admission_no or not year_of_study or not semester or not term_type:
+                flash("Student requests must include admission number, department, course, year of study, academic year, and semester or trimester.", "danger")
+                return render_template(
+                    "main/request_account.html",
+                    departments=departments,
+                    courses=courses,
+                    term_types=get_term_types(),
+                    term_calendar=get_term_calendar(),
+                    default_academic_year=get_default_academic_year(),
+                )
 
         if requested_role == "lecturer":
             if not department_id:
                 flash("Lecturer requests must include a department.", "danger")
-                return render_template("main/request_account.html", departments=departments, courses=courses)
+                return render_template(
+                    "main/request_account.html",
+                    departments=departments,
+                    courses=courses,
+                    term_types=get_term_types(),
+                    term_calendar=get_term_calendar(),
+                    default_academic_year=get_default_academic_year(),
+                )
 
         status_token = secrets.token_urlsafe(32)
 
@@ -153,6 +177,8 @@ def request_account():
             admission_no=admission_no or None,
             year_of_study=int(year_of_study) if year_of_study else None,
             semester=semester or None,
+            term_type=term_type or None,
+            academic_year=academic_year if requested_role == "student" else None,
             department_id=int(department_id) if department_id else None,
             course_id=int(course_id) if course_id else None,
             status="pending",
@@ -173,7 +199,14 @@ def request_account():
         flash("Your request has been submitted. Please verify your email before admin approval.", "success")
         return redirect(url_for("main.request_status_by_email", email=new_request.email))
 
-    return render_template("main/request_account.html", departments=departments, courses=courses)
+    return render_template(
+        "main/request_account.html",
+        departments=departments,
+        courses=courses,
+        term_types=get_term_types(),
+        term_calendar=get_term_calendar(),
+        default_academic_year=get_default_academic_year(),
+    )
 
 
 @main_bp.route("/verify-request/<token>")

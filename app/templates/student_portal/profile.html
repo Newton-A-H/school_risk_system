@@ -30,6 +30,24 @@
       <input type="text" name="phone" class="form-control" value="{{ student.phone or '' }}">
     </div>
     <div class="col-12">
+      <div class="alert alert-light border mb-0">
+        <div class="fw-semibold mb-2">Academic placement</div>
+        <div class="small mb-1"><strong>Academic Year:</strong> {{ student.academic_year }}</div>
+        <div class="small mb-1"><strong>Term Structure:</strong> {{ student.term_type|title }}</div>
+        <div class="small mb-1"><strong>Current Period:</strong> {{ student.semester }}</div>
+        <div class="small">
+          <strong>Registered Units:</strong>
+          {% if current_units %}
+            {% for item in current_units %}
+            {{ item.unit.code }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+          {% else %}
+            No units saved yet.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-12">
       <button type="submit" class="btn btn-brand rounded-pill px-4">Save Changes</button>
     </div>
   </form>

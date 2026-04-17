@@ -1,6 +1,7 @@
 from app import create_app
 from app.extensions import db
-from app.models import Course, Department, Student, User
+from app.models import Course, Department, Student, Unit, User
+from app.services.academic import get_default_academic_year
 
 
 def _create_user(full_name, email, role, password, department_id=None):
@@ -65,6 +66,13 @@ def app(tmp_path):
         db.session.add(course)
         db.session.flush()
 
+        units = [
+            Unit(course_id=course.id, name="Introduction to Computing", code="ICT101"),
+            Unit(course_id=course.id, name="Database Systems", code="ICT102"),
+            Unit(course_id=course.id, name="Web Development", code="ICT103"),
+        ]
+        db.session.add_all(units)
+
         admin = _create_user("Admin User", "admin@test.local", "admin", "Admin@123")
         lecturer = _create_user(
             "Lecturer User",
@@ -88,6 +96,8 @@ def app(tmp_path):
             course_id=course.id,
             year_of_study=1,
             semester="Semester 1",
+            term_type="semester",
+            academic_year=get_default_academic_year(),
             user_id=student_user.id,
             lecturer_user_id=lecturer.id,
         )
@@ -97,6 +107,7 @@ def app(tmp_path):
         app.config["TEST_IDS"] = {
             "department_id": department.id,
             "course_id": course.id,
+            "unit_ids": [unit.id for unit in units],
             "admin_id": admin.id,
             "lecturer_id": lecturer.id,
             "student_user_id": student_user.id,

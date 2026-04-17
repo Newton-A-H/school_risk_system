@@ -67,7 +67,7 @@
           <th>Programme</th>
           <th>Department</th>
           <th>Year</th>
-          <th>Semester</th>
+          <th>Current Period</th>
           <th></th>
         </tr>
       </thead>
@@ -80,7 +80,7 @@
           <td>{{ student.course.program_level }} in {{ student.course.name }}</td>
           <td>{{ student.department.name }}</td>
           <td>{{ student.year_of_study }}</td>
-          <td>{{ student.semester }}</td>
+          <td>{{ student.academic_year }} | {{ student.semester }}</td>
 
           <td class="text-end">
             <div class="d-flex gap-2 justify-content-end">
@@ -92,6 +92,9 @@
               </a>
               <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
                 Questionnaire
+              </a>
+              <a href="{{ url_for('students.manage_registration', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                Units
               </a>
 
               <form method="post" action="{{ url_for('students.delete', student_id=student.id) }}" onsubmit="return confirm('Delete this learner record?');">

@@ -21,6 +21,7 @@
   <div class="header-actions">
     <a href="{{ url_for('student_portal.profile') }}" class="btn btn-outline-secondary rounded-pill px-4">Profile</a>
     <a href="{{ url_for('student_portal.academic_history') }}" class="btn btn-outline-secondary rounded-pill px-4">Academic History</a>
+    <a href="{{ url_for('student_portal.add_questionnaire') }}" class="btn btn-outline-secondary rounded-pill px-4">New Check-in</a>
     <a href="{{ url_for('student_portal.interventions') }}" class="btn btn-outline-secondary rounded-pill px-4">Interventions</a>
     <a href="{{ url_for('student_portal.report') }}" class="btn btn-outline-primary rounded-pill px-4">Printable Report</a>
   </div>
@@ -110,7 +111,9 @@
       <div class="mb-2"><strong>Course:</strong> {{ student.course.name }}</div>
       <div class="mb-2"><strong>Course Code:</strong> {{ student.course.code }}</div>
       <div class="mb-2"><strong>Year of Study:</strong> {{ student.year_of_study }}</div>
-      <div class="mb-2"><strong>Semester:</strong> {{ student.semester }}</div>
+      <div class="mb-2"><strong>Academic Year:</strong> {{ student.academic_year }}</div>
+      <div class="mb-2"><strong>Term Structure:</strong> {{ student.term_type|title }}</div>
+      <div class="mb-2"><strong>Current Period:</strong> {{ student.semester }}</div>
       {% if record %}
       <div class="mb-2"><strong>Coursework Total:</strong> {{ record.coursework_total }}</div>
       <div class="mb-2"><strong>Exam Mark:</strong> {{ record.exam_mark }}</div>
@@ -122,6 +125,33 @@
         </span>
       </div>
       <div class="mb-0"><strong>Teacher Comment:</strong> {{ record.teacher_comment or 'No comment provided' }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="panel-card p-4">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Registration</div>
+          <h4 class="section-title">My Current Units</h4>
+        </div>
+      </div>
+      {% if current_units %}
+      <div class="row g-3">
+        {% for item in current_units %}
+        <div class="col-md-6 col-xl-4">
+          <div class="border rounded-4 p-3 bg-white h-100">
+            <div class="fw-semibold">{{ item.unit.code }}</div>
+            <div class="text-secondary small">{{ item.unit.name }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">No units have been registered for your current academic period yet.</div>
       {% endif %}
     </div>
   </div>

@@ -64,8 +64,30 @@
           </div>
 
           <div class="col-md-3">
-            <label class="form-label">Semester</label>
-            <input type="text" name="semester" class="form-control" required>
+            <label class="form-label">Academic Year</label>
+            <input type="text" name="academic_year" class="form-control" value="{{ default_academic_year }}" required>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Term Structure</label>
+            <select name="term_type" id="termTypeSelect" class="form-select" required onchange="filterStudentTerms()">
+              <option value="">Select one</option>
+              {% for value, label in term_types %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Semester / Trimester</label>
+            <select name="semester" id="termNameSelect" class="form-select" required>
+              <option value="">Select one</option>
+              {% for term_type, options in term_choices.items() %}
+                {% for term_name in options %}
+                <option value="{{ term_name }}" data-term-type="{{ term_type }}">{{ term_name }}</option>
+                {% endfor %}
+              {% endfor %}
+            </select>
           </div>
 
           <div class="col-md-6">
@@ -73,6 +95,37 @@
             <input type="text" name="temporary_password" class="form-control" required>
             <div class="form-text">The student will be asked to change this after signing in for the first time.</div>
           </div>
+
+          <div class="col-12">
+            <label class="form-label">Registered Units</label>
+            <div class="form-text mb-2">Select up to {{ max_units_per_term }} units for the learner's current academic period.</div>
+            <div class="row g-3">
+              {% for course in courses %}
+                {% for unit in course.units %}
+                <div class="col-md-6 col-xl-4">
+                  <label class="border rounded-4 p-3 d-flex gap-3 align-items-start h-100 bg-white unit-choice" data-course="{{ course.id }}">
+                    <input type="checkbox" name="unit_ids" value="{{ unit.id }}" class="form-check-input mt-1">
+                    <span>
+                      <span class="fw-semibold d-block">{{ unit.code }}</span>
+                      <span class="text-secondary small">{{ unit.name }}</span>
+                    </span>
+                  </label>
+                </div>
+                {% endfor %}
+              {% else %}
+              <div class="col-12">
+                <div class="alert alert-light border mb-0">No units have been added to any course yet. Add them from the course setup area first.</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-light border mt-4">
+          <strong>Academic calendar</strong><br>
+          {% for item in term_calendar %}
+          <div class="small {% if not loop.last %}mb-2{% endif %}">{{ item.label }}: {% for term in item.terms %}{{ term.name }} ({{ term.window }}){% if not loop.last %}, {% endif %}{% endfor %}</div>
+          {% endfor %}
         </div>
 
         <div class="mt-4 d-flex gap-2">
@@ -100,8 +153,40 @@ function filterStudentCourses() {
 
     option.hidden = departmentId && option.dataset.department !== departmentId;
   });
+
+  filterUnitChoices();
 }
 
-document.addEventListener("DOMContentLoaded", filterStudentCourses);
+function filterStudentTerms() {
+  const termType = document.getElementById("termTypeSelect").value;
+  const select = document.getElementById("termNameSelect");
+  const options = select.querySelectorAll("option");
+  select.value = "";
+  options.forEach(option => {
+    if (!option.value) {
+      option.hidden = false;
+      return;
+    }
+    option.hidden = termType && option.dataset.termType !== termType;
+  });
+}
+
+function filterUnitChoices() {
+  const courseId = document.getElementById("courseSelect").value;
+  document.querySelectorAll(".unit-choice").forEach(choice => {
+    const visible = !courseId || choice.dataset.course === courseId;
+    choice.parentElement.style.display = visible ? "" : "none";
+    if (!visible) {
+      const input = choice.querySelector("input");
+      if (input) input.checked = false;
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  filterStudentCourses();
+  filterStudentTerms();
+  filterUnitChoices();
+});
 </script>
 {% endblock %}

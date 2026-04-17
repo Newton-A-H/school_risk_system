@@ -12,6 +12,7 @@
   <div class="header-actions">
     <a href="{{ url_for('students.add_academic_record', student_id=student.id) }}" class="btn btn-brand rounded-pill px-4">Add Academic Record</a>
     <a href="{{ url_for('students.add_questionnaire', student_id=student.id) }}" class="btn btn-outline-primary rounded-pill px-4">Add Student Check-in</a>
+    <a href="{{ url_for('students.manage_registration', student_id=student.id) }}" class="btn btn-outline-secondary rounded-pill px-4">Manage Registration</a>
     <a href="{{ url_for('students.index') }}" class="btn btn-outline-secondary rounded-pill px-4">Back to Learners</a>
   </div>
 </div>
@@ -34,7 +35,9 @@
       <div class="mb-2"><strong>Course:</strong> {{ student.course.name }}</div>
       <div class="mb-2"><strong>Course Code:</strong> {{ student.course.code }}</div>
       <div class="mb-2"><strong>Year:</strong> {{ student.year_of_study }}</div>
-      <div class="mb-0"><strong>Semester:</strong> {{ student.semester }}</div>
+      <div class="mb-2"><strong>Academic Year:</strong> {{ student.academic_year }}</div>
+      <div class="mb-2"><strong>Term Structure:</strong> {{ student.term_type|title }}</div>
+      <div class="mb-0"><strong>Current Period:</strong> {{ student.semester }}</div>
     </div>
   </div>
 
@@ -109,7 +112,8 @@
       </div>
 
       {% if record %}
-      <div class="mb-2"><strong>Term:</strong> {{ record.term_name }}</div>
+      <div class="mb-2"><strong>Academic Year:</strong> {{ record.academic_year }}</div>
+      <div class="mb-2"><strong>Term:</strong> {{ record.term_name }} ({{ record.term_type|title }})</div>
       <div class="mb-2"><strong>Assignment Mark:</strong> {{ record.assignment_mark or 0 }}</div>
       <div class="mb-2"><strong>CAT Mark:</strong> {{ record.cat_mark }}</div>
       <div class="mb-2"><strong>Coursework Total:</strong> {{ record.coursework_total }}</div>
@@ -134,6 +138,8 @@
       </div>
 
       {% if response %}
+      <div class="mb-2"><strong>Academic Year:</strong> {{ response.academic_year }}</div>
+      <div class="mb-2"><strong>Term:</strong> {{ response.term_name }} ({{ response.term_type|title }})</div>
       <div class="mb-2"><strong>Attendance Frequency:</strong> {{ response.attendance_frequency }}</div>
       <div class="mb-2"><strong>Coursework on Time:</strong> {{ response.coursework_on_time }}</div>
       <div class="mb-2"><strong>Main Challenge:</strong> {{ response.main_challenge }}</div>
@@ -142,6 +148,55 @@
       {% else %}
       <div class="alert alert-light border mb-0">No student check-in has been added yet.</div>
       {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Registration</div>
+          <h4 class="section-title">Current Units</h4>
+        </div>
+      </div>
+      {% set latest_registration = registration_history[0] if registration_history else None %}
+      {% if latest_registration %}
+      <div class="mb-3 text-secondary small">{{ latest_registration.academic_year }} | {{ latest_registration.term_name }} ({{ latest_registration.term_type|title }})</div>
+      <ul class="mb-0 ps-3">
+        {% for unit in latest_registration.units %}
+        <li class="mb-2">{{ unit.code }} - {{ unit.name }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="alert alert-light border mb-0">No unit registration has been saved yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card p-4 h-100">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Previous Records</div>
+          <h4 class="section-title">Saved History</h4>
+        </div>
+      </div>
+      <div class="small">
+        <div class="fw-semibold mb-2">Academic Records</div>
+        {% for item in academic_history[:4] %}
+        <div class="mb-2">{{ item.academic_year }} | {{ item.term_name }} | Final Mark {{ item.final_mark }}</div>
+        {% else %}
+        <div class="text-secondary mb-3">No academic history yet.</div>
+        {% endfor %}
+        <div class="fw-semibold mb-2 mt-3">Check-ins</div>
+        {% for item in questionnaire_history[:4] %}
+        <div class="mb-2">{{ item.academic_year }} | {{ item.term_name }} | {{ item.main_challenge }}</div>
+        {% else %}
+        <div class="text-secondary">No check-in history yet.</div>
+        {% endfor %}
+      </div>
     </div>
   </div>
 </div>

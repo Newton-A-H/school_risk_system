@@ -16,16 +16,19 @@ from ..models import (
     RiskPrediction,
     Department,
     Course,
+    Unit,
     AccountRequest,
     FeedbackConversation,
     FeedbackMessage,
     AuditLog,
     InterventionLog,
     AcademicRecord,
+    StudentUnitRegistration,
 )
 from ..utils.decorators import role_required
 from ..services.email_service import send_verification_email, send_temp_password_email
 from ..services.artifact_store import META_FILE, IMPORTANCE_FILE, HISTORY_FILE
+from ..services.academic import get_default_academic_year, normalize_term_type
 from ..ml.training import train_and_save_model
 
 
@@ -169,6 +172,8 @@ def export_center():
                     "course": learner.course.name if learner.course else "",
                     "year_of_study": learner.year_of_study,
                     "semester": learner.semester,
+                    "term_type": learner.term_type,
+                    "academic_year": learner.academic_year,
                     "linked_user_email": linked_user.email if linked_user else "",
                     "lecturer_email": lecturer.email if lecturer else "",
                     "created_at": learner.created_at.isoformat() if learner.created_at else "",
@@ -176,7 +181,8 @@ def export_center():
             )
         return _csv_download("edusentinel_learners.csv", list(rows[0].keys()) if rows else [
             "admission_no", "full_name", "email", "phone", "department", "course",
-            "year_of_study", "semester", "linked_user_email", "lecturer_email", "created_at"
+            "year_of_study", "semester", "term_type", "academic_year",
+            "linked_user_email", "lecturer_email", "created_at"
         ], rows)
 
     if dataset == "predictions":
@@ -425,6 +431,8 @@ def bulk_imports():
                 department_code = (row.get("department_code") or "").strip().upper()
                 course_code = (row.get("course_code") or "").strip().upper()
                 semester = (row.get("semester") or "").strip()
+                term_type = normalize_term_type((row.get("term_type") or "").strip()) or "semester"
+                academic_year = (row.get("academic_year") or "").strip() or get_default_academic_year()
 
                 if not admission_no or not full_name or not department_code or not course_code or not semester:
                     skipped += 1
@@ -457,6 +465,8 @@ def bulk_imports():
                     course_id=course.id,
                     year_of_study=year_of_study,
                     semester=semester,
+                    term_type=term_type,
+                    academic_year=academic_year,
                     user_id=None,
                     lecturer_user_id=None,
                 )
@@ -747,6 +757,54 @@ def courses():
     return render_template("admin/courses.html", courses=items)
 
 
+@admin_bp.route("/courses/<int:course_id>/units", methods=["GET", "POST"])
+@login_required
+@role_required("admin")
+def manage_units(course_id):
+    course = Course.query.get_or_404(course_id)
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        code = request.form.get("code", "").strip().upper()
+
+        if not name or not code:
+            flash("Unit name and code are required.", "danger")
+            return render_template("admin/manage_units.html", course=course)
+
+        existing_code = Unit.query.filter_by(code=code).first()
+        if existing_code:
+            flash("A unit with that code already exists.", "danger")
+            return render_template("admin/manage_units.html", course=course)
+
+        db.session.add(Unit(course_id=course.id, name=name, code=code))
+        _log_audit("unit_created", "unit", detail=code)
+        db.session.commit()
+
+        flash("Unit added successfully.", "success")
+        return redirect(url_for("admin.manage_units", course_id=course.id))
+
+    return render_template("admin/manage_units.html", course=course)
+
+
+@admin_bp.route("/units/<int:unit_id>/delete", methods=["POST"])
+@login_required
+@role_required("admin")
+def delete_unit(unit_id):
+    unit = Unit.query.get_or_404(unit_id)
+    course_id = unit.course_id
+
+    if StudentUnitRegistration.query.filter_by(unit_id=unit.id).first():
+        flash("This unit cannot be deleted because it already appears in learner registrations.", "danger")
+        return redirect(url_for("admin.manage_units", course_id=course_id))
+
+    _log_audit("unit_deleted", "unit", unit.id, unit.code)
+    db.session.delete(unit)
+    db.session.commit()
+
+    flash("Unit deleted successfully.", "success")
+    return redirect(url_for("admin.manage_units", course_id=course_id))
+
+
 @admin_bp.route("/courses/new", methods=["GET", "POST"])
 @login_required
 @role_required("admin")
@@ -901,6 +959,10 @@ def approve_account_request(request_id):
                 matched_student.year_of_study = req.year_of_study
             if req.semester:
                 matched_student.semester = req.semester
+            if req.term_type:
+                matched_student.term_type = req.term_type
+            if req.academic_year:
+                matched_student.academic_year = req.academic_year
         else:
             learner = Student(
                 admission_no=req.admission_no or f"AUTO-{new_user.id}",
@@ -913,6 +975,8 @@ def approve_account_request(request_id):
                 course_id=req.course_id,
                 year_of_study=req.year_of_study or 1,
                 semester=req.semester or "Semester 1",
+                term_type=req.term_type or "semester",
+                academic_year=req.academic_year or get_default_academic_year(),
                 user_id=new_user.id,
                 lecturer_user_id=None,
             )

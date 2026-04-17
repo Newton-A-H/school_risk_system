@@ -1,5 +1,5 @@
 from app.extensions import db
-from app.models import AccountRequest, FeedbackConversation, FeedbackMessage, Student, User
+from app.models import AccountRequest, FeedbackConversation, FeedbackMessage, QuestionnaireResponse, Student, User
 from app.services.token_service import generate_token
 
 from conftest import login
@@ -32,6 +32,8 @@ def test_public_account_request_verify_and_admin_approval(app, client):
             "course_id": test_ids["course_id"],
             "admission_no": "ADM777",
             "year_of_study": "2",
+            "academic_year": "2025/2026",
+            "term_type": "semester",
             "semester": "Semester 2",
         },
         follow_redirects=False,
@@ -76,7 +78,10 @@ def test_admin_can_create_learner_and_lecturer_can_access_dashboard(app, client)
             "department_id": test_ids["department_id"],
             "course_id": test_ids["course_id"],
             "year_of_study": "1",
+            "academic_year": "2025/2026",
+            "term_type": "semester",
             "semester": "Semester 1",
+            "unit_ids": [str(unit_id) for unit_id in test_ids["unit_ids"][:2]],
             "temporary_password": "TempPass@123",
         },
         follow_redirects=False,
@@ -103,14 +108,41 @@ def test_student_dashboard_access(client):
     history_response = client.get("/student/prediction-history")
     profile_response = client.get("/student/profile")
     report_response = client.get("/student/report")
+    questionnaire_form_response = client.get("/student/questionnaire/new")
     change_password_response = client.get("/auth/change-password")
 
     assert dashboard_response.status_code == 200
     assert history_response.status_code == 200
     assert profile_response.status_code == 200
     assert report_response.status_code == 200
+    assert questionnaire_form_response.status_code == 200
     assert change_password_response.status_code == 200
     assert b"Save New Password" in change_password_response.data
+
+
+def test_student_can_submit_own_questionnaire(app, client):
+    login(client, "student@test.local", "Student@123")
+
+    response = client.post(
+        "/student/questionnaire/new",
+        data={
+            "academic_year": "2025/2026",
+            "term_type": "semester",
+            "term_name": "Semester 1",
+            "attendance_frequency": "Often",
+            "coursework_on_time": "Often",
+            "main_challenge": "Time Management",
+            "early_warning_helpful": "Yes",
+            "study_hours_per_week": "10",
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+
+    with app.app_context():
+        saved = QuestionnaireResponse.query.filter_by(student_id=app.config["TEST_IDS"]["student_id"]).first()
+        assert saved is not None
+        assert saved.term_name == "Semester 1"
 
 
 def test_notification_center_and_bulk_import(app, client):
