@@ -78,8 +78,8 @@ def dashboard():
         )
 
     learner_count = len(students)
-    high_risk_count = sum(1 for prediction in predictions if prediction.predicted_risk == "High Risk")
-    medium_risk_count = sum(1 for prediction in predictions if prediction.predicted_risk == "Medium Risk")
+    high_risk_count = len({prediction.student_id for prediction in predictions if prediction.predicted_risk == "High Risk"})
+    medium_risk_count = len({prediction.student_id for prediction in predictions if prediction.predicted_risk == "Medium Risk"})
 
     pending_verifications = 0
     if student_ids:

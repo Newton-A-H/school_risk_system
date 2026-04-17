@@ -47,9 +47,12 @@ def load_json_file(path, default):
 def build_risk_counts():
     counts = {"Low Risk": 0, "Medium Risk": 0, "High Risk": 0}
     predictions = RiskPrediction.query.all()
+    seen_pairs = set()
     for prediction in predictions:
-        if prediction.predicted_risk in counts:
+        pair = (prediction.student_id, prediction.predicted_risk)
+        if prediction.predicted_risk in counts and pair not in seen_pairs:
             counts[prediction.predicted_risk] += 1
+            seen_pairs.add(pair)
     return counts
 
 

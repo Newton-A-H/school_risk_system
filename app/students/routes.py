@@ -76,6 +76,15 @@ def _current_registration_ids(student):
     ]
 
 
+def _parse_whole_number(value, label):
+    raw = (value or "").strip()
+    if not raw:
+        raise ValueError(f"{label} is required.")
+    if "." in raw:
+        raise ValueError(f"{label} must be a whole number.")
+    return int(raw)
+
+
 def _extract_registration_form(request_obj):
     academic_year = request_obj.form.get("academic_year", "").strip() or get_default_academic_year()
     term_type = normalize_term_type(request_obj.form.get("term_type", ""))
@@ -389,12 +398,12 @@ def add_academic_record(student_id):
             return render_template("students/academic_form.html", student=student, current_units=current_units, **_term_context())
 
         try:
-            assignment_value = float(assignment_mark) if assignment_mark else 0.0
-            cat_value = float(cat_mark)
-            exam_value = float(exam_mark)
-            attendance_value = float(attendance_percent)
-        except ValueError:
-            flash("Marks and attendance must be valid numbers.", "danger")
+            assignment_value = _parse_whole_number(assignment_mark, "Assignment mark") if assignment_mark else 0
+            cat_value = _parse_whole_number(cat_mark, "CAT mark")
+            exam_value = _parse_whole_number(exam_mark, "Exam mark")
+            attendance_value = _parse_whole_number(attendance_percent, "Attendance percentage")
+        except ValueError as exc:
+            flash(str(exc), "danger")
             return render_template("students/academic_form.html", student=student, current_units=current_units, **_term_context())
 
         record = AcademicRecord(

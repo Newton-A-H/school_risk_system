@@ -206,8 +206,8 @@ class AcademicRecord(db.Model):
         assignment = self.assignment_mark or 0.0
         cat = self.cat_mark or 0.0
         exam = self.exam_mark or 0.0
-        self.coursework_total = assignment + cat
-        self.final_mark = self.coursework_total + exam
+        self.coursework_total = round(assignment + cat)
+        self.final_mark = round(self.coursework_total + exam)
 
 
 class QuestionnaireResponse(db.Model):

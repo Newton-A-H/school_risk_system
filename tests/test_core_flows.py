@@ -1,5 +1,6 @@
 from app.extensions import db
 from app.models import AcademicRecord, AccountRequest, FeedbackConversation, FeedbackMessage, QuestionnaireResponse, Student, User
+from app.admin.routes import build_risk_counts
 from app.services.token_service import generate_token
 
 from conftest import login
@@ -170,6 +171,77 @@ def test_academic_record_requires_specific_unit(app, client):
         record = AcademicRecord.query.filter_by(student_id=test_ids["student_id"]).first()
         assert record is not None
         assert record.unit_id == test_ids["unit_ids"][0]
+
+
+def test_dashboard_risk_counts_deduplicate_same_student_same_risk(app):
+    from app.models import RiskPrediction
+
+    with app.app_context():
+        student_id = app.config["TEST_IDS"]["student_id"]
+        record = AcademicRecord(
+            student_id=student_id,
+            unit_id=app.config["TEST_IDS"]["unit_ids"][0],
+            term_name="Semester 1",
+            term_type="semester",
+            academic_year="2025/2026",
+            assignment_mark=10,
+            cat_mark=20,
+            exam_mark=50,
+            attendance_percent=90,
+        )
+        record.compute_totals()
+        response = QuestionnaireResponse(
+            student_id=student_id,
+            term_name="Semester 1",
+            term_type="semester",
+            academic_year="2025/2026",
+            attendance_frequency="Often",
+            coursework_on_time="Often",
+            main_challenge="None",
+            early_warning_helpful="Yes",
+            study_hours_per_week=12,
+        )
+        db.session.add_all([record, response])
+        db.session.flush()
+        db.session.add_all(
+            [
+                RiskPrediction(
+                    student_id=student_id,
+                    academic_record_id=record.id,
+                    questionnaire_response_id=response.id,
+                    predicted_risk="Low Risk",
+                    high_risk_probability=0.12,
+                    threshold_used=0.55,
+                    recommendation="Keep going.",
+                    created_by=app.config["TEST_IDS"]["admin_id"],
+                ),
+                RiskPrediction(
+                    student_id=student_id,
+                    academic_record_id=record.id,
+                    questionnaire_response_id=response.id,
+                    predicted_risk="Low Risk",
+                    high_risk_probability=0.18,
+                    threshold_used=0.55,
+                    recommendation="Keep going.",
+                    created_by=app.config["TEST_IDS"]["admin_id"],
+                ),
+                RiskPrediction(
+                    student_id=student_id,
+                    academic_record_id=record.id,
+                    questionnaire_response_id=response.id,
+                    predicted_risk="High Risk",
+                    high_risk_probability=0.82,
+                    threshold_used=0.55,
+                    recommendation="Follow up quickly.",
+                    created_by=app.config["TEST_IDS"]["admin_id"],
+                ),
+            ]
+        )
+        db.session.commit()
+
+        counts = build_risk_counts()
+        assert counts["Low Risk"] == 1
+        assert counts["High Risk"] == 1
 
 
 def test_notification_center_and_bulk_import(app, client):
