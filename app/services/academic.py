@@ -14,9 +14,9 @@ TERM_STRUCTURES = {
         "label": "Trimester",
         "terms": ["Trimester 1", "Trimester 2", "Trimester 3"],
         "calendar": {
-            "Trimester 1": "January to April",
-            "Trimester 2": "May to August",
-            "Trimester 3": "September to December",
+            "Trimester 1": "September to December",
+            "Trimester 2": "January to April",
+            "Trimester 3": "May to August",
         },
     },
 }
