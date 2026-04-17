@@ -1,7 +1,11 @@
 __pycache__/
+**/__pycache__/
 *.py[cod]
 .pytest_cache/
 .coverage
 htmlcov/
 .env
 venv/
+~$*
+*.tmp
+*.bak
