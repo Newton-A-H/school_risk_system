@@ -179,6 +179,7 @@ class AcademicRecord(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    unit_id = db.Column(db.Integer, db.ForeignKey("units.id"), nullable=True, index=True)
     term_name = db.Column(db.String(50), nullable=False)
     term_type = db.Column(db.String(20), nullable=False, default="semester")
     academic_year = db.Column(db.String(20), nullable=False, default="")
@@ -198,6 +199,8 @@ class AcademicRecord(db.Model):
     verified_at = db.Column(db.DateTime, nullable=True)
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    unit = db.relationship("Unit", backref="academic_records")
 
     def compute_totals(self):
         assignment = self.assignment_mark or 0.0

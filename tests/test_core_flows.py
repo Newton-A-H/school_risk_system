@@ -1,5 +1,5 @@
 from app.extensions import db
-from app.models import AccountRequest, FeedbackConversation, FeedbackMessage, QuestionnaireResponse, Student, User
+from app.models import AcademicRecord, AccountRequest, FeedbackConversation, FeedbackMessage, QuestionnaireResponse, Student, User
 from app.services.token_service import generate_token
 
 from conftest import login
@@ -143,6 +143,33 @@ def test_student_can_submit_own_questionnaire(app, client):
         saved = QuestionnaireResponse.query.filter_by(student_id=app.config["TEST_IDS"]["student_id"]).first()
         assert saved is not None
         assert saved.term_name == "Semester 1"
+
+
+def test_academic_record_requires_specific_unit(app, client):
+    login(client, "admin@test.local", "Admin@123")
+    test_ids = app.config["TEST_IDS"]
+
+    response = client.post(
+        f"/students/{test_ids['student_id']}/academic/new",
+        data={
+            "unit_id": str(test_ids["unit_ids"][0]),
+            "academic_year": "2025/2026",
+            "term_type": "semester",
+            "term_name": "Semester 1",
+            "attendance_percent": "88",
+            "assignment_mark": "12",
+            "cat_mark": "20",
+            "exam_mark": "55",
+            "teacher_comment": "Strong improvement.",
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+
+    with app.app_context():
+        record = AcademicRecord.query.filter_by(student_id=test_ids["student_id"]).first()
+        assert record is not None
+        assert record.unit_id == test_ids["unit_ids"][0]
 
 
 def test_notification_center_and_bulk_import(app, client):

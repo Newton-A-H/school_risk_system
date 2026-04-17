@@ -354,11 +354,21 @@ def detail(student_id):
 @role_required("admin", "lecturer")
 def add_academic_record(student_id):
     student = _student_query_for_current_user().filter_by(id=student_id).first_or_404()
+    current_units = [
+        item.unit
+        for item in student.unit_registrations
+        if item.academic_year == student.academic_year
+        and item.term_type == student.term_type
+        and item.term_name == student.semester
+    ]
+    if not current_units:
+        current_units = list(student.course.units)
 
     if request.method == "POST":
         academic_year = request.form.get("academic_year", "").strip() or student.academic_year or get_default_academic_year()
         term_type = normalize_term_type(request.form.get("term_type", "")) or student.term_type
         term_name = request.form.get("term_name", "").strip()
+        unit_id = request.form.get("unit_id", "").strip()
         assignment_mark = request.form.get("assignment_mark", "").strip()
         cat_mark = request.form.get("cat_mark", "").strip()
         exam_mark = request.form.get("exam_mark", "").strip()
@@ -367,11 +377,16 @@ def add_academic_record(student_id):
 
         if not validate_term_selection(term_type, term_name):
             flash("Please choose a valid semester or trimester for this record.", "danger")
-            return render_template("students/academic_form.html", student=student, **_term_context())
+            return render_template("students/academic_form.html", student=student, current_units=current_units, **_term_context())
 
-        if not term_name or not cat_mark or not exam_mark or not attendance_percent:
+        if not unit_id or not term_name or not cat_mark or not exam_mark or not attendance_percent:
             flash("Please fill in all required academic fields.", "danger")
-            return render_template("students/academic_form.html", student=student, **_term_context())
+            return render_template("students/academic_form.html", student=student, current_units=current_units, **_term_context())
+
+        selected_unit = next((unit for unit in current_units if str(unit.id) == unit_id), None)
+        if not selected_unit:
+            flash("Please choose a valid unit for this academic record.", "danger")
+            return render_template("students/academic_form.html", student=student, current_units=current_units, **_term_context())
 
         try:
             assignment_value = float(assignment_mark) if assignment_mark else 0.0
@@ -380,10 +395,11 @@ def add_academic_record(student_id):
             attendance_value = float(attendance_percent)
         except ValueError:
             flash("Marks and attendance must be valid numbers.", "danger")
-            return render_template("students/academic_form.html", student=student, **_term_context())
+            return render_template("students/academic_form.html", student=student, current_units=current_units, **_term_context())
 
         record = AcademicRecord(
             student_id=student.id,
+            unit_id=selected_unit.id,
             term_name=term_name,
             term_type=term_type,
             academic_year=academic_year,
@@ -402,7 +418,7 @@ def add_academic_record(student_id):
         flash("Academic record saved successfully.", "success")
         return redirect(url_for("students.detail", student_id=student.id))
 
-    return render_template("students/academic_form.html", student=student, **_term_context())
+    return render_template("students/academic_form.html", student=student, current_units=current_units, **_term_context())
 
 
 @students_bp.route("/<int:student_id>/questionnaire/new", methods=["GET", "POST"])

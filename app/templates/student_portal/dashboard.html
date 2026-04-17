@@ -115,6 +115,7 @@
       <div class="mb-2"><strong>Term Structure:</strong> {{ student.term_type|title }}</div>
       <div class="mb-2"><strong>Current Period:</strong> {{ student.semester }}</div>
       {% if record %}
+      <div class="mb-2"><strong>Latest Unit:</strong> {{ record.unit.code if record.unit else 'Not linked' }}{% if record.unit %} - {{ record.unit.name }}{% endif %}</div>
       <div class="mb-2"><strong>Coursework Total:</strong> {{ record.coursework_total }}</div>
       <div class="mb-2"><strong>Exam Mark:</strong> {{ record.exam_mark }}</div>
       <div class="mb-2"><strong>Final Mark:</strong> {{ record.final_mark }}</div>

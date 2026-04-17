@@ -28,6 +28,7 @@ def _ensure_additive_columns():
             "academic_year": "VARCHAR(20) NOT NULL DEFAULT ''",
         },
         "academic_records": {
+            "unit_id": "INTEGER",
             "term_type": "VARCHAR(20) NOT NULL DEFAULT 'semester'",
             "academic_year": "VARCHAR(20) NOT NULL DEFAULT ''",
         },

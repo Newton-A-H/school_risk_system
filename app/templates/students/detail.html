@@ -112,6 +112,7 @@
       </div>
 
       {% if record %}
+      <div class="mb-2"><strong>Unit:</strong> {{ record.unit.code if record.unit else 'Not linked' }}{% if record.unit %} - {{ record.unit.name }}{% endif %}</div>
       <div class="mb-2"><strong>Academic Year:</strong> {{ record.academic_year }}</div>
       <div class="mb-2"><strong>Term:</strong> {{ record.term_name }} ({{ record.term_type|title }})</div>
       <div class="mb-2"><strong>Assignment Mark:</strong> {{ record.assignment_mark or 0 }}</div>
@@ -186,7 +187,7 @@
       <div class="small">
         <div class="fw-semibold mb-2">Academic Records</div>
         {% for item in academic_history[:4] %}
-        <div class="mb-2">{{ item.academic_year }} | {{ item.term_name }} | Final Mark {{ item.final_mark }}</div>
+        <div class="mb-2">{{ item.academic_year }} | {{ item.term_name }} | {{ item.unit.code if item.unit else 'Unit not linked' }} | Final Mark {{ item.final_mark }}</div>
         {% else %}
         <div class="text-secondary mb-3">No academic history yet.</div>
         {% endfor %}

@@ -54,6 +54,7 @@
       <h4 class="mb-3">Latest Academic Record</h4>
       {% if record %}
       <ul class="list-unstyled text-secondary mb-0">
+        <li class="mb-2">Unit: {{ record.unit.code if record.unit else 'Not linked' }}{% if record.unit %} - {{ record.unit.name }}{% endif %}</li>
         <li class="mb-2">Term: {{ record.term_name }}</li>
         <li class="mb-2">Coursework Total: {{ record.coursework_total }}</li>
         <li class="mb-2">Exam Mark: {{ record.exam_mark }}</li>

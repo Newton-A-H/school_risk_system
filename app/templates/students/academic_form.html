@@ -17,11 +17,22 @@
       <form method="post">
         <div class="row g-4">
           <div class="col-md-6">
+            <label class="form-label">Unit</label>
+            <select name="unit_id" class="form-select" required>
+              <option value="">Select unit</option>
+              {% for unit in current_units %}
+              <option value="{{ unit.id }}">{{ unit.code }} - {{ unit.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Academic records are now saved against a specific unit.</div>
+          </div>
+
+          <div class="col-md-6">
             <label class="form-label">Academic Year</label>
             <input type="text" name="academic_year" class="form-control" value="{{ student.academic_year or default_academic_year }}" required>
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">Term Structure</label>
             <select name="term_type" id="academicTermType" class="form-select" required onchange="filterAcademicTerms()">
               <option value="">Select one</option>
@@ -31,7 +42,7 @@
             </select>
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">Semester / Trimester</label>
             <select name="term_name" id="academicTermName" class="form-select" required>
               <option value="">Select one</option>
@@ -43,7 +54,7 @@
             </select>
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">Attendance Percentage</label>
             <input type="number" step="0.01" min="0" max="100" name="attendance_percent" class="form-control" placeholder="For example: 85" required>
           </div>
