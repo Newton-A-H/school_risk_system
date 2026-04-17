@@ -59,8 +59,6 @@
       </div>
       <div class="d-flex flex-wrap gap-2">
         <a href="{{ url_for('students.index', risk_level='High Risk') }}" class="btn btn-outline-danger rounded-pill">At-Risk Learners</a>
-        <a href="{{ url_for('students.index', semester='Semester 1') }}" class="btn btn-outline-primary rounded-pill">Semester 1</a>
-        <a href="{{ url_for('students.index', semester='Semester 2') }}" class="btn btn-outline-primary rounded-pill">Semester 2</a>
         <a href="{{ url_for('students.index', export='csv') }}" class="btn btn-outline-secondary rounded-pill">Export Learners</a>
       </div>
     </div>
